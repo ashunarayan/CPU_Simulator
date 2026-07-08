@@ -1,15 +1,41 @@
+import Camera from "../camera/camera";
+import GridRenderer from "./GridRenderer";
+import Vector2 from "../math/Vector2";
+import Circuit from "../circuit/Circuit";
+import AndGate from "../components/AndGate";
+import ComponentRenderer from "./ComponentRenderer";
 export default class CanvasRenderer {
 
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
+    private camera: Camera;
+    private dragging = false;
+    private gridRenderer: GridRenderer;
+    private lastMouseX = 0;
+
+    private lastMouseY = 0;
+    private circuit: Circuit;
+    private componentRenderer: ComponentRenderer;
 
 
 
     constructor(canvas: HTMLCanvasElement) {
-         console.log("CanvasRenderer constructor called");
-
-
         this.canvas = canvas;
+        this.camera = new Camera();
+        this.gridRenderer = new GridRenderer();
+        this.canvas.addEventListener("wheel", this.onWheel);
+
+        this.canvas.addEventListener("mousedown", this.onMouseDown);
+
+        this.circuit = new Circuit();
+        this.componentRenderer = new ComponentRenderer();
+
+        
+
+        window.addEventListener("mousemove", this.onMouseMove);
+
+        window.addEventListener("mouseup", this.onMouseUp);
+
 
         const context = canvas.getContext("2d");
 
@@ -26,21 +52,75 @@ export default class CanvasRenderer {
         this.render();
     }
 
-    private drawGrid(): void {
 
-        const spacing = 20;
+    private onMouseDown = (e: MouseEvent): void => {
 
-        this.ctx.fillStyle = "#404040";
+        if (e.button !== 1)
+            return;
 
-        for (let x = 0; x < this.canvas.width; x += spacing) {
-            for (let y = 0; y < this.canvas.height; y += spacing) {
-                this.ctx.fillRect(x, y, 2, 2);
-            }
-        }
+        this.dragging = true;
+
+        this.lastMouseX = e.clientX;
+
+        this.lastMouseY = e.clientY;
+
     }
+    private onMouseUp = (): void => {
+
+        this.dragging = false;
+
+    }
+    private onMouseMove = (e: MouseEvent): void => {
+
+        if (!this.dragging)
+            return;
+
+        const dx = e.clientX - this.lastMouseX;
+
+        const dy = e.clientY - this.lastMouseY;
+
+        this.camera.move(-dx / this.camera.zoom, -dy / this.camera.zoom);
+
+        this.lastMouseX = e.clientX;
+
+        this.lastMouseY = e.clientY;
+
+    }
+    private onWheel = (e: WheelEvent): void => {
+
+        e.preventDefault();
+
+        const factor = e.deltaY > 0 ? 0.9 : 1.1;
+
+        // Mouse position in screen coordinates
+        const mouse = new Vector2(
+            e.offsetX,
+            e.offsetY
+        );
+
+        // World position before zoom
+        const worldBefore = this.camera.screenToWorld(mouse);
+
+        // Apply zoom
+        this.camera.setZoom(
+            this.camera.zoom * factor
+        );
+
+        // World position after zoom
+        const worldAfter = this.camera.screenToWorld(mouse);
+
+        // Difference
+        const delta = worldBefore.subtract(worldAfter);
+
+        // Move camera so the point under the cursor stays fixed
+        this.camera.translate(delta);
+
+    }
+
+
     private onResize = () => {
-    this.resize();
-}
+        this.resize();
+    }
 
     private resize(): void {
 
@@ -58,15 +138,26 @@ export default class CanvasRenderer {
             this.canvas.height
         );
     }
+    
 
     private render = (): void => {
 
         this.clear();
-        console.log(this.canvas.width, this.canvas.height);
-        this.drawGrid();
 
+        this.gridRenderer.draw(
+            this.ctx,
+            this.canvas,
+            this.camera
+        );
+
+        this.componentRenderer.draw(
+            this.ctx,
+            this.circuit,
+            this.camera
+        );
         requestAnimationFrame(this.render);
 
     }
 
 }
+
