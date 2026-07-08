@@ -34,7 +34,13 @@ function App() {
       <main className="workspace">
 
         <aside className="left-panel">
-
+          <button>🖱️</button>
+          <button>AND</button>
+          <button>OR</button>
+          <button>NOT</button>
+          <button>IN</button>
+          <button>OUT</button>
+          <button>WIRE</button>
         </aside>
 
         <section className="canvas-container">

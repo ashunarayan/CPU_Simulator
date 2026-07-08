@@ -4,6 +4,11 @@ import Vector2 from "../math/Vector2";
 import Circuit from "../circuit/Circuit";
 import AndGate from "../components/AndGate";
 import ComponentRenderer from "./ComponentRenderer";
+import ToolManager from "../tools/ToolManager";
+import InputManager from "../input/InputManager";
+import EditorState from "../editor/EditorState";
+
+
 export default class CanvasRenderer {
 
     private canvas: HTMLCanvasElement;
@@ -16,7 +21,9 @@ export default class CanvasRenderer {
     private lastMouseY = 0;
     private circuit: Circuit;
     private componentRenderer: ComponentRenderer;
-
+    private toolManager: ToolManager;
+    private editorState: EditorState;
+    private inputManager: InputManager;
 
 
     constructor(canvas: HTMLCanvasElement) {
@@ -29,8 +36,13 @@ export default class CanvasRenderer {
 
         this.circuit = new Circuit();
         this.componentRenderer = new ComponentRenderer();
+        this.toolManager = new ToolManager();
+        this.editorState = new EditorState();
+        this.inputManager =
+            new InputManager(
+                this.toolManager
+            );
 
-        
 
         window.addEventListener("mousemove", this.onMouseMove);
 
@@ -138,7 +150,7 @@ export default class CanvasRenderer {
             this.canvas.height
         );
     }
-    
+
 
     private render = (): void => {
 
