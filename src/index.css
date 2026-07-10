@@ -129,3 +129,49 @@ body,
     height: 100%;
     display: block;
 }
+
+.left-panel{
+
+    width:90px;
+
+    background:#1d1d1d;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:10px;
+
+    padding:10px;
+
+    border-right:1px solid #333;
+
+}
+
+.left-panel button{
+
+    height:42px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:#2b2b2b;
+
+    color:white;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+    font-weight:600;
+
+}
+
+.left-panel button:hover{
+
+    background:#3c82f6;
+
+    transform:scale(1.05);
+
+}

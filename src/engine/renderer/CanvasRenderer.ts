@@ -2,14 +2,18 @@ import Camera from "../camera/camera";
 import GridRenderer from "./GridRenderer";
 import Vector2 from "../math/Vector2";
 import Circuit from "../circuit/Circuit";
-import AndGate from "../components/AndGate";
+import AndGate from "../components/gates/AndGate";
+import Component from "../components/base/Component";
 import ComponentRenderer from "./ComponentRenderer";
 import ToolManager from "../tools/ToolManager";
+import Tool from "../tools/Tool";
 import InputManager from "../input/InputManager";
 import EditorState from "../editor/EditorState";
+import WireRenderer from "./WireRenderer";
 
 
 export default class CanvasRenderer {
+
 
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
@@ -21,33 +25,46 @@ export default class CanvasRenderer {
     private lastMouseY = 0;
     private circuit: Circuit;
     private componentRenderer: ComponentRenderer;
-    private toolManager: ToolManager;
+    private toolManager = ToolManager;
     private editorState: EditorState;
     private inputManager: InputManager;
+    private wireRenderer =
+        new WireRenderer();
 
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
         this.camera = new Camera();
+        this.toolManager = ToolManager;
         this.gridRenderer = new GridRenderer();
+        this.circuit = new Circuit();
+
+        this.circuit.add(
+            new AndGate(
+                new Vector2(200, 150)
+            )
+        );
+
         this.canvas.addEventListener("wheel", this.onWheel);
 
         this.canvas.addEventListener("mousedown", this.onMouseDown);
-
-        this.circuit = new Circuit();
         this.componentRenderer = new ComponentRenderer();
-        this.toolManager = new ToolManager();
+
         this.editorState = new EditorState();
         this.inputManager =
             new InputManager(
-                this.toolManager
+                this.toolManager,
+                this.editorState
             );
 
 
         window.addEventListener("mousemove", this.onMouseMove);
 
         window.addEventListener("mouseup", this.onMouseUp);
-
+        window.addEventListener(
+            "keydown",
+            this.onKeyDown
+        );
 
         const context = canvas.getContext("2d");
 
@@ -65,25 +82,123 @@ export default class CanvasRenderer {
     }
 
 
+
+    private selectComponent(component: Component | null): void {
+
+        this.circuit.clearSelection();
+
+        if (component) {
+
+            component.selected = true;
+
+            this.editorState.selectedComponent = component;
+
+        }
+        else {
+
+            this.editorState.selectedComponent = null;
+
+        }
+
+    }
     private onMouseDown = (e: MouseEvent): void => {
 
-        if (e.button !== 1)
+        if (e.button === 1) {
+
+            this.startCameraDrag(e);
             return;
 
-        this.dragging = true;
+        }
 
-        this.lastMouseX = e.clientX;
+        if (e.button !== 0)
+            return;
 
-        this.lastMouseY = e.clientY;
+        switch (this.toolManager.getTool()) {
+
+            case Tool.SELECT:
+
+                this.onLeftMouseDown(e);
+                break;
+
+            case Tool.AND:
+
+                this.placeAndGate(e);
+                break;
+
+            case Tool.OR:
+
+                // later
+
+                break;
+
+            case Tool.NOT:
+
+                // later
+
+                break;
+
+        }
 
     }
     private onMouseUp = (): void => {
 
         this.dragging = false;
 
+        this.editorState.draggingComponent = false;
+
     }
     private onMouseMove = (e: MouseEvent): void => {
+        const mouse = new Vector2(
+            e.offsetX,
+            e.offsetY
+        );
 
+        this.editorState.mouseWorld =
+            this.camera.screenToWorld(mouse);
+        // Component Drag
+        if (
+            this.editorState.draggingComponent &&
+            this.editorState.selectedComponent
+        ) {
+
+            const mouse = new Vector2(
+                e.offsetX,
+                e.offsetY
+            );
+
+
+
+            const world =
+                this.camera.screenToWorld(mouse);
+
+            const position =
+
+                world.subtract(
+                    this.editorState.dragOffset
+                );
+
+            const snappedX =
+
+                Math.round(position.x / 20) * 20;
+
+            const snappedY =
+
+                Math.round(position.y / 20) * 20;
+
+            this.editorState.selectedComponent.moveTo(
+
+                new Vector2(
+                    snappedX,
+                    snappedY
+                )
+
+            );
+
+            return;
+
+        }
+
+        // Camera Pan
         if (!this.dragging)
             return;
 
@@ -91,11 +206,100 @@ export default class CanvasRenderer {
 
         const dy = e.clientY - this.lastMouseY;
 
-        this.camera.move(-dx / this.camera.zoom, -dy / this.camera.zoom);
+        this.camera.move(
+            -dx / this.camera.zoom,
+            -dy / this.camera.zoom
+        );
 
         this.lastMouseX = e.clientX;
 
         this.lastMouseY = e.clientY;
+
+    }
+
+    private onLeftMouseDown(e: MouseEvent): void {
+
+        const mouse = new Vector2(
+            e.offsetX,
+            e.offsetY
+        );
+
+        const world =
+            this.camera.screenToWorld(mouse);
+
+        const pin =
+            this.circuit.getPinAt(world);
+
+        if (pin) {
+
+            this.editorState.selectedPin =
+                pin;
+
+            return;
+
+        }
+
+        const hit =
+            this.circuit.getComponentAt(world);
+
+        this.selectComponent(hit);
+
+        if (hit) {
+
+            this.editorState.draggingComponent = true;
+
+            this.editorState.dragOffset =
+                world.subtract(hit.position);
+
+        }
+
+    }
+
+    private onKeyDown = (
+        e: KeyboardEvent
+    ): void => {
+
+        if (
+            e.key === "Delete" &&
+            this.editorState.selectedComponent
+        ) {
+
+            this.circuit.remove(
+
+                this.editorState.selectedComponent
+
+            );
+
+            this.editorState.selectedComponent =
+                null;
+
+        }
+
+    }
+
+    private placeAndGate(e: MouseEvent): void {
+
+        const mouse = new Vector2(
+            e.offsetX,
+            e.offsetY
+        );
+
+        const world =
+            this.camera.screenToWorld(mouse);
+
+        const x =
+            Math.round(world.x / 20) * 20;
+
+        const y =
+            Math.round(world.y / 20) * 20;
+
+        this.circuit.add(
+
+            new AndGate(
+                new Vector2(x, y)
+            )
+
+        );
 
     }
     private onWheel = (e: WheelEvent): void => {
@@ -130,6 +334,16 @@ export default class CanvasRenderer {
     }
 
 
+    private startCameraDrag(e: MouseEvent): void {
+
+        this.dragging = true;
+
+        this.lastMouseX = e.clientX;
+
+        this.lastMouseY = e.clientY;
+
+    }
+
     private onResize = () => {
         this.resize();
     }
@@ -157,17 +371,30 @@ export default class CanvasRenderer {
         this.clear();
 
         this.gridRenderer.draw(
-            this.ctx,
-            this.canvas,
-            this.camera
-        );
+    this.ctx,
+    this.canvas,
+    this.camera
+);
 
-        this.componentRenderer.draw(
-            this.ctx,
-            this.circuit,
-            this.camera
-        );
-        requestAnimationFrame(this.render);
+this.componentRenderer.draw(
+    this.ctx,
+    this.circuit,
+    this.camera
+);
+
+if (
+    this.toolManager.getTool() === Tool.AND
+) {
+
+    this.componentRenderer.drawGhostAndGate(
+        this.ctx,
+        this.editorState.mouseWorld,
+        this.camera
+    );
+
+}
+
+requestAnimationFrame(this.render);
 
     }
 

@@ -1,25 +1,20 @@
 import ToolManager from "../tools/ToolManager";
+import EditorState from "../editor/EditorState";
 
 export default class InputManager {
 
-    private toolManager: ToolManager;
+    constructor(
 
-    constructor(toolManager: ToolManager) {
+        private toolManager: typeof ToolManager,
 
-        this.toolManager = toolManager;
+        private editorState: EditorState
 
-    }
+    ) {}
 
-    public onMouseMove(e: MouseEvent): void {
+    public onMouseMove(): void {}
 
-    }
+    public onMouseDown(): void {}
 
-    public onMouseDown(e: MouseEvent): void {
-
-    }
-
-    public onMouseUp(e: MouseEvent): void {
-
-    }
+    public onMouseUp(): void {}
 
 }

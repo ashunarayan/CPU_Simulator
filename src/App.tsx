@@ -1,3 +1,6 @@
+
+import toolManager from "./engine/tools/ToolManager";
+import Tool from "./engine/tools/Tool";
 import { useEffect, useRef } from "react";
 import "./index.css";
 import CanvasRenderer from "./engine/renderer/CanvasRenderer";
@@ -34,14 +37,24 @@ function App() {
       <main className="workspace">
 
         <aside className="left-panel">
-          <button>🖱️</button>
-          <button>AND</button>
-          <button>OR</button>
-          <button>NOT</button>
-          <button>IN</button>
-          <button>OUT</button>
-          <button>WIRE</button>
-        </aside>
+
+    <button onClick={() => toolManager.setTool(Tool.SELECT)}>
+        Select
+    </button>
+
+    <button onClick={() => toolManager.setTool(Tool.AND)}>
+        AND
+    </button>
+
+    <button onClick={() => toolManager.setTool(Tool.OR)}>
+        OR
+    </button>
+
+    <button onClick={() => toolManager.setTool(Tool.NOT)}>
+        NOT
+    </button>
+
+</aside>
 
         <section className="canvas-container">
           <canvas ref={canvasRef} className="editor-canvas"></canvas>
