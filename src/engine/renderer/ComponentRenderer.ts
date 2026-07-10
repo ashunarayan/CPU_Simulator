@@ -28,13 +28,20 @@ export default class ComponentRenderer {
 
             for (const pin of component.getPins()) {
 
+                pin.setOwnerPosition(
+                    component.position
+                );
+
+                const world =
+                    pin.getWorldPosition();
+
                 ctx.beginPath();
 
                 ctx.fillStyle = "#FFD54F";
 
                 ctx.arc(
-                    component.position.x + pin.position.x,
-                    component.position.y + pin.position.y,
+                    world.x,
+                    world.y,
                     4,
                     0,
                     Math.PI * 2
@@ -43,70 +50,69 @@ export default class ComponentRenderer {
                 ctx.fill();
 
             }
-
         }
 
         ctx.restore();
 
     }
     public drawGhostAndGate(
-    ctx: CanvasRenderingContext2D,
-    position: Vector2,
-    camera: Camera
-): void {
+        ctx: CanvasRenderingContext2D,
+        position: Vector2,
+        camera: Camera
+    ): void {
 
-    ctx.save();
+        ctx.save();
 
-    ctx.translate(
-        -camera.position.x * camera.zoom,
-        -camera.position.y * camera.zoom
-    );
+        ctx.translate(
+            -camera.position.x * camera.zoom,
+            -camera.position.y * camera.zoom
+        );
 
-    ctx.scale(
-        camera.zoom,
-        camera.zoom
-    );
+        ctx.scale(
+            camera.zoom,
+            camera.zoom
+        );
 
-    const x =
-        Math.round(position.x / 20) * 20;
+        const x =
+            Math.round(position.x / 20) * 20;
 
-    const y =
-        Math.round(position.y / 20) * 20;
+        const y =
+            Math.round(position.y / 20) * 20;
 
-    ctx.translate(x, y);
+        ctx.translate(x, y);
 
-    ctx.globalAlpha = 0.35;
+        ctx.globalAlpha = 0.35;
 
-    ctx.fillStyle = "#3d3d3d";
+        ctx.fillStyle = "#3d3d3d";
 
-    ctx.strokeStyle = "#ffffff";
+        ctx.strokeStyle = "#ffffff";
 
-    ctx.lineWidth = 2;
+        ctx.lineWidth = 2;
 
-    ctx.beginPath();
+        ctx.beginPath();
 
-    ctx.moveTo(0,0);
+        ctx.moveTo(0, 0);
 
-    ctx.lineTo(35,0);
+        ctx.lineTo(35, 0);
 
-    ctx.arc(
-        35,
-        30,
-        30,
-        -Math.PI/2,
-        Math.PI/2
-    );
+        ctx.arc(
+            35,
+            30,
+            30,
+            -Math.PI / 2,
+            Math.PI / 2
+        );
 
-    ctx.lineTo(0,60);
+        ctx.lineTo(0, 60);
 
-    ctx.closePath();
+        ctx.closePath();
 
-    ctx.fill();
+        ctx.fill();
 
-    ctx.stroke();
+        ctx.stroke();
 
-    ctx.restore();
+        ctx.restore();
 
-}
+    }
 
 }

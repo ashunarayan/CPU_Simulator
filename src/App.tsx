@@ -42,6 +42,17 @@ function App() {
         Select
     </button>
 
+    <button
+    className={
+        toolManager.getTool() === Tool.WIRE
+            ? "active-tool"
+            : ""
+    }
+    onClick={() => toolManager.setTool(Tool.WIRE)}
+>
+    Wire
+</button>
+
     <button onClick={() => toolManager.setTool(Tool.AND)}>
         AND
     </button>

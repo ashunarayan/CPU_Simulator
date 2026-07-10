@@ -5,30 +5,13 @@ export default class Pin {
 
     public position: Vector2;
 
+    private ownerPosition = new Vector2();
+
     public readonly type: PinType;
 
     public readonly ownerId: number;
 
     public value = false;
-    public contains(
-    point: Vector2,
-    componentPosition: Vector2
-): boolean {
-
-    const world =
-        this.getWorldPosition(
-            componentPosition
-        );
-
-    const dx =
-        point.x - world.x;
-
-    const dy =
-        point.y - world.y;
-
-    return dx * dx + dy * dy <= 36;
-}
-
 
     constructor(
         ownerId: number,
@@ -41,14 +24,38 @@ export default class Pin {
         this.type = type;
 
     }
-    public getWorldPosition(
-    componentPosition: Vector2
-): Vector2 {
 
-    return componentPosition.add(
-        this.position
-    );
+    public setOwnerPosition(
+        position: Vector2
+    ): void {
 
-}
+        this.ownerPosition = position;
+
+    }
+
+    public getWorldPosition(): Vector2 {
+
+        return this.ownerPosition.add(
+            this.position
+        );
+
+    }
+
+    public contains(
+        point: Vector2
+    ): boolean {
+
+        const world =
+            this.getWorldPosition();
+
+        const dx =
+            point.x - world.x;
+
+        const dy =
+            point.y - world.y;
+
+        return dx * dx + dy * dy <= 36;
+
+    }
 
 }

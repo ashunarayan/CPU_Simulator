@@ -1,17 +1,13 @@
 import Circuit from "../circuit/Circuit";
 import Camera from "../camera/camera";
 import Vector2 from "../math/Vector2";
-
+import Wire from "../connection/Wire";
 export default class WireRenderer {
 
     public draw(
-
         ctx: CanvasRenderingContext2D,
-
         circuit: Circuit,
-
         camera: Camera
-
     ): void {
 
         ctx.save();
@@ -27,28 +23,71 @@ export default class WireRenderer {
         );
 
         ctx.strokeStyle = "#4FC3F7";
-
         ctx.lineWidth = 2;
+        ctx.setLineDash([]);
 
         for (const wire of circuit.getWires()) {
 
-            const from = wire.from.getWorldPosition(
+            const fromComponent =
                 circuit.getComponentById(
                     wire.from.ownerId
-                )!.position
-            );
+                );
 
-            const to = wire.to.getWorldPosition(
-                circuit.getComponentById(
-                    wire.to.ownerId
-                )!.position
+            if (!fromComponent)
+                continue;
+
+            wire.from.setOwnerPosition(
+                fromComponent.position
             );
 
             ctx.beginPath();
 
-            ctx.moveTo(from.x, from.y);
+            const start =
+                wire.from.getWorldPosition();
 
-            ctx.lineTo(to.x, to.y);
+            ctx.moveTo(
+                start.x,
+                start.y
+            );
+
+            // Draw every stored vertex
+            for (let i = 1; i < wire.vertices.length; i++) {
+
+                const vertex =
+                    wire.vertices[i];
+
+                ctx.lineTo(
+                    vertex.x,
+                    vertex.y
+                );
+
+            }
+
+            // Draw final pin
+            if (wire.to) {
+
+                const toComponent =
+                    circuit.getComponentById(
+                        wire.to.ownerId
+                    );
+
+                if (toComponent) {
+
+                    wire.to.setOwnerPosition(
+                        toComponent.position
+                    );
+
+                    const end =
+                        wire.to.getWorldPosition();
+
+                    ctx.lineTo(
+                        end.x,
+                        end.y
+                    );
+
+                }
+
+            }
 
             ctx.stroke();
 
@@ -57,50 +96,71 @@ export default class WireRenderer {
         ctx.restore();
 
     }
+
+
     public drawPreview(
+        ctx: CanvasRenderingContext2D,
+        wire: Wire,
+        mouse: Vector2,
+        camera: Camera
+    ): void {
 
-    ctx: CanvasRenderingContext2D,
+        ctx.save();
 
-    start: Vector2,
+        ctx.translate(
+            -camera.position.x * camera.zoom,
+            -camera.position.y * camera.zoom
+        );
 
-    end: Vector2,
+        ctx.scale(
+            camera.zoom,
+            camera.zoom
+        );
 
-    camera: Camera
+        ctx.strokeStyle = "#FFD54F";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 8]);
 
-): void {
+        ctx.beginPath();
 
-    ctx.save();
+        const start =
+            wire.from.getWorldPosition();
 
-    ctx.translate(
-        -camera.position.x * camera.zoom,
-        -camera.position.y * camera.zoom
-    );
+        ctx.moveTo(
+            start.x,
+            start.y
+        );
 
-    ctx.scale(
-        camera.zoom,
-        camera.zoom
-    );
+        // Draw committed vertices
+        for (let i = 1; i < wire.vertices.length; i++) {
 
-    ctx.setLineDash([8, 8]);
+            const vertex = wire.vertices[i];
 
-    ctx.strokeStyle = "#FFD54F";
+            ctx.lineTo(
+                vertex.x,
+                vertex.y
+            );
 
-    ctx.beginPath();
+        }
 
-    ctx.moveTo(
-        start.x,
-        start.y
-    );
+        // Last committed point
+        const last =
+            wire.getLastVertex();
 
-    ctx.lineTo(
-        end.x,
-        end.y
-    );
+        // Orthogonal preview
+        ctx.lineTo(
+            mouse.x,
+            last.y
+        );
 
-    ctx.stroke();
+        ctx.lineTo(
+            mouse.x,
+            mouse.y
+        );
 
-    ctx.restore();
+        ctx.stroke();
 
-}
+        ctx.restore();
 
+    }
 }

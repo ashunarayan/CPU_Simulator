@@ -72,11 +72,12 @@ public getPinAt(
 
     for (const pin of this.pins) {
 
+        pin.setOwnerPosition(
+            this.position
+        );
+
         if (
-            pin.contains(
-                point,
-                this.position
-            )
+            pin.contains(point)
         ) {
 
             return pin;

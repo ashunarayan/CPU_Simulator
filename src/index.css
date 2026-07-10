@@ -175,3 +175,7 @@ body,
     transform:scale(1.05);
 
 }
+.active-tool{
+    background:#4FC3F7;
+    color:white;
+}

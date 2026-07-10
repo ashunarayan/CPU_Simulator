@@ -2,6 +2,7 @@ import Camera from "../camera/camera";
 import GridRenderer from "./GridRenderer";
 import Vector2 from "../math/Vector2";
 import Circuit from "../circuit/Circuit";
+import Wire from "../connection/Wire";
 import AndGate from "../components/gates/AndGate";
 import Component from "../components/base/Component";
 import ComponentRenderer from "./ComponentRenderer";
@@ -115,6 +116,12 @@ export default class CanvasRenderer {
 
         switch (this.toolManager.getTool()) {
 
+            case Tool.WIRE:
+
+                this.onWireClick(e);
+
+                break;
+
             case Tool.SELECT:
 
                 this.onLeftMouseDown(e);
@@ -140,6 +147,7 @@ export default class CanvasRenderer {
         }
 
     }
+
     private onMouseUp = (): void => {
 
         this.dragging = false;
@@ -147,6 +155,7 @@ export default class CanvasRenderer {
         this.editorState.draggingComponent = false;
 
     }
+
     private onMouseMove = (e: MouseEvent): void => {
         const mouse = new Vector2(
             e.offsetX,
@@ -197,6 +206,11 @@ export default class CanvasRenderer {
             return;
 
         }
+        if (this.editorState.wiring) {
+
+            return;
+
+        }
 
         // Camera Pan
         if (!this.dragging)
@@ -227,18 +241,6 @@ export default class CanvasRenderer {
         const world =
             this.camera.screenToWorld(mouse);
 
-        const pin =
-            this.circuit.getPinAt(world);
-
-        if (pin) {
-
-            this.editorState.selectedPin =
-                pin;
-
-            return;
-
-        }
-
         const hit =
             this.circuit.getComponentAt(world);
 
@@ -254,6 +256,99 @@ export default class CanvasRenderer {
         }
 
     }
+
+
+    private onWireClick(
+        e: MouseEvent
+    ): void {
+
+        const mouse = new Vector2(
+            e.offsetX,
+            e.offsetY
+        );
+
+        const world =
+            this.camera.screenToWorld(mouse);
+
+        // Snap to grid
+        const snapped = new Vector2(
+            Math.round(world.x / 20) * 20,
+            Math.round(world.y / 20) * 20
+        );
+
+        // ------------------------------
+        // First click -> Start wire
+        // ------------------------------
+
+        if (!this.editorState.currentWire) {
+
+            const pin =
+                this.circuit.getPinAt(world);
+
+            if (!pin)
+                return;
+
+            pin.setOwnerPosition(
+                this.circuit
+                    .getComponentById(pin.ownerId)!
+                    .position
+            );
+
+            this.editorState.currentWire =
+                new Wire(pin);
+
+            this.editorState.wiring = true;
+
+            return;
+
+        }
+
+        const wire =
+            this.editorState.currentWire;
+
+        // ------------------------------
+        // Finish on another pin
+        // ------------------------------
+
+        const endPin =
+            this.circuit.getPinAt(world);
+
+        if (
+            endPin &&
+            endPin !== wire.from
+        ) {
+
+            endPin.setOwnerPosition(
+                this.circuit
+                    .getComponentById(endPin.ownerId)!
+                    .position
+            );
+
+            wire.to = endPin;
+
+            wire.addVertex(
+                endPin.getWorldPosition()
+            );
+
+            this.circuit.addWire(wire);
+
+            this.editorState.currentWire = null;
+            this.editorState.wiring = false;
+
+            return;
+
+        }
+
+        // ------------------------------
+        // Empty space -> Add bend
+        // ------------------------------
+
+        wire.addVertex(snapped);
+
+    }
+
+
+
 
     private onKeyDown = (
         e: KeyboardEvent
@@ -371,30 +466,43 @@ export default class CanvasRenderer {
         this.clear();
 
         this.gridRenderer.draw(
-    this.ctx,
-    this.canvas,
-    this.camera
-);
+            this.ctx,
+            this.canvas,
+            this.camera
+        );
 
-this.componentRenderer.draw(
-    this.ctx,
-    this.circuit,
-    this.camera
-);
+        this.componentRenderer.draw(
+            this.ctx,
+            this.circuit,
+            this.camera
+        );
 
-if (
-    this.toolManager.getTool() === Tool.AND
+        this.wireRenderer.draw(
+            this.ctx,
+            this.circuit,
+            this.camera
+        );
+
+        // Preview
+        if (
+    this.editorState.currentWire
 ) {
 
-    this.componentRenderer.drawGhostAndGate(
+    this.wireRenderer.drawPreview(
+
         this.ctx,
+
+        this.editorState.currentWire,
+
         this.editorState.mouseWorld,
+
         this.camera
+
     );
 
 }
 
-requestAnimationFrame(this.render);
+        requestAnimationFrame(this.render);
 
     }
 
