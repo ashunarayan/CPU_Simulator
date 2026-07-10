@@ -324,7 +324,7 @@ export default class CanvasRenderer {
                     .position
             );
 
-            wire.to = endPin;
+            wire.finish(endPin);
 
             wire.addVertex(
                 endPin.getWorldPosition()

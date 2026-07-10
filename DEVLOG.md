@@ -104,3 +104,15 @@ engine/
 - Input manager
 - Component placement
 - Render first real AND gate
+
+Day 3 – Interactive Wiring System
+✅ Completed
+Implemented interactive wire creation.
+Added multi-segment wire routing.
+Wire bends can now be placed anywhere on the canvas.
+Implemented orthogonal (90°) wire rendering.
+Connected wires directly to gate pins.
+Added live wire preview while routing.
+Fixed multiple routing/rendering bugs.
+Improved renderer architecture by separating wire storage from drawing logic.
+Refactored wire path handling using vertex-based routing.
