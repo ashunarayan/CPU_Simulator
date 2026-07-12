@@ -8,9 +8,12 @@ export default class Switch extends Component {
 
     private state = LogicState.LOW;
 
-    constructor(position: Vector2) {
+    constructor(
+    position: Vector2,
+    rotation = 0
+) {
 
-        super(position, 50, 30);
+        super(position, 50, 30, rotation);
 
         this.pins.push(
 

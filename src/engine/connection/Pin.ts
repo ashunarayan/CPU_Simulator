@@ -12,6 +12,7 @@ export default class Pin {
     public readonly ownerId: number;
 
     public value: LogicState =LogicState.LOW;
+    private ownerRotation = 0;
 
     constructor(
         ownerId: number,
@@ -32,6 +33,13 @@ export default class Pin {
         this.ownerPosition = position;
 
     }
+    public setOwnerRotation(
+    rotation: number
+): void {
+
+    this.ownerRotation = rotation;
+
+}
 
     public getWorldPosition(): Vector2 {
 
@@ -40,7 +48,8 @@ export default class Pin {
         );
 
     }
-
+    
+    
     public contains(
         point: Vector2
     ): boolean {

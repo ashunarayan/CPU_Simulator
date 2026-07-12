@@ -13,6 +13,10 @@ import EditorState from "../editor/EditorState";
 import WireRenderer from "./WireRenderer";
 import Switch from "../components/input/Switch";
 import OutputLed from "../components/input/OutputLed";
+import OrGate from "../components/gates/OrGate";
+import NotGate from "../components/gates/NotGate";
+import XorGate from "../components/gates/XorGate";
+
 
 
 export default class CanvasRenderer {
@@ -122,6 +126,22 @@ export default class CanvasRenderer {
         }
 
     }
+
+    private selectWire(
+        wire: Wire | null
+    ): void {
+
+        this.circuit.clearWireSelection();
+
+        if (wire) {
+
+            wire.selected = true;
+
+        }
+
+    }
+
+
     private onMouseDown = (e: MouseEvent): void => {
 
         if (e.button === 1) {
@@ -154,13 +174,19 @@ export default class CanvasRenderer {
 
             case Tool.OR:
 
-                // later
+                this.placeOrGate(e);
 
                 break;
 
             case Tool.NOT:
 
-                // later
+                this.placeNotGate(e);
+
+                break;
+
+            case Tool.XOR:
+
+                this.placeXorGate(e);
 
                 break;
             case Tool.SWITCH:
@@ -174,6 +200,8 @@ export default class CanvasRenderer {
                 this.placeLed(e);
 
                 break;
+
+
 
         }
 
@@ -264,18 +292,28 @@ export default class CanvasRenderer {
 
     private onLeftMouseDown(e: MouseEvent): void {
 
-        const mouse = new Vector2(
-            e.offsetX,
-            e.offsetY
-        );
+    const mouse = new Vector2(
+        e.offsetX,
+        e.offsetY
+    );
 
-        const world =
-            this.camera.screenToWorld(mouse);
+    const world =
+        this.camera.screenToWorld(mouse);
 
-        const hit =
-            this.circuit.getComponentAt(world);
+    // -------------------------
+    // Check Component
+    // -------------------------
+
+    const hit =
+        this.circuit.getComponentAt(world);
+
+    if (hit) {
+
+        this.selectWire(null);
 
         this.selectComponent(hit);
+
+        // Toggle switch
         if (hit instanceof Switch) {
 
             hit.onClick();
@@ -284,16 +322,27 @@ export default class CanvasRenderer {
 
         }
 
-        if (hit) {
+        this.editorState.draggingComponent = true;
 
-            this.editorState.draggingComponent = true;
+        this.editorState.dragOffset =
+            world.subtract(hit.position);
 
-            this.editorState.dragOffset =
-                world.subtract(hit.position);
-
-        }
+        return;
 
     }
+
+    // -------------------------
+    // Check Wire
+    // -------------------------
+
+    const wire =
+        this.circuit.getWireAt(world);
+
+    this.selectComponent(null);
+
+    this.selectWire(wire);
+
+}
 
 
     private onWireClick(
@@ -389,26 +438,63 @@ export default class CanvasRenderer {
 
 
     private onKeyDown = (
-        e: KeyboardEvent
-    ): void => {
+    e: KeyboardEvent
+): void => {
 
-        if (
-            e.key === "Delete" &&
-            this.editorState.selectedComponent
-        ) {
+    // Delete
+    if (e.key === "Delete") {
+
+        // Delete selected component
+        if (this.editorState.selectedComponent) {
 
             this.circuit.remove(
-
                 this.editorState.selectedComponent
-
             );
 
-            this.editorState.selectedComponent =
-                null;
+            this.editorState.selectedComponent = null;
+
+            return;
+
+        }
+
+        // Delete selected wire
+        const wire =
+            this.circuit.getSelectedWire();
+
+        if (wire) {
+
+            this.circuit.removeWire(wire);
+
+            return;
 
         }
 
     }
+
+    // Cancel wire drawing
+    if (
+        e.key === "Escape" &&
+        this.editorState.currentWire
+    ) {
+
+        this.editorState.currentWire = null;
+
+        this.editorState.wiring = false;
+
+        return;
+
+    }
+    if (e.key === "r" || e.key === "R") {
+
+    this.editorState.placementRotation =
+
+        (this.editorState.placementRotation + 90) % 360;
+
+}
+
+}
+
+
 
     private placeAndGate(e: MouseEvent): void {
 
@@ -435,6 +521,87 @@ export default class CanvasRenderer {
         );
 
     }
+
+    private placeOrGate(e: MouseEvent): void {
+
+        const mouse = new Vector2(
+            e.offsetX,
+            e.offsetY
+        );
+
+        const world =
+            this.camera.screenToWorld(mouse);
+
+        const x =
+            Math.round(world.x / 20) * 20;
+
+        const y =
+            Math.round(world.y / 20) * 20;
+
+        this.circuit.add(
+
+            new OrGate(
+                new Vector2(x, y)
+            )
+
+        );
+
+    }
+
+
+    private placeNotGate(e: MouseEvent): void {
+
+        const mouse = new Vector2(
+            e.offsetX,
+            e.offsetY
+        );
+
+        const world =
+            this.camera.screenToWorld(mouse);
+
+        const x =
+            Math.round(world.x / 20) * 20;
+
+        const y =
+            Math.round(world.y / 20) * 20;
+
+        this.circuit.add(
+
+            new NotGate(
+                new Vector2(x, y)
+            )
+
+        );
+
+    }
+
+    private placeXorGate(e: MouseEvent): void {
+
+        const mouse = new Vector2(
+            e.offsetX,
+            e.offsetY
+        );
+
+        const world =
+            this.camera.screenToWorld(mouse);
+
+        const x =
+            Math.round(world.x / 20) * 20;
+
+        const y =
+            Math.round(world.y / 20) * 20;
+
+        this.circuit.add(
+
+            new XorGate(
+                new Vector2(x, y)
+            )
+
+        );
+
+    }
+
+
     private placeSwitch(
         e: MouseEvent
     ): void {
@@ -554,6 +721,24 @@ export default class CanvasRenderer {
             this.canvas.height
         );
     }
+
+    public getMouseWorld(): Vector2 {
+
+    return this.editorState.mouseWorld;
+
+}
+
+public getZoom(): number {
+
+    return this.camera.zoom;
+
+}
+
+public getCurrentTool(): Tool {
+
+    return this.toolManager.getTool();
+
+}
 
 
     private render = (): void => {

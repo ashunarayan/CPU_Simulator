@@ -10,6 +10,8 @@ enum Tool {
 
     NOT,
 
+    XOR,
+
     INPUT,
 
     OUTPUT,
@@ -17,6 +19,7 @@ enum Tool {
     CLOCK,
 
     SWITCH,
+
     LED,
 
 }

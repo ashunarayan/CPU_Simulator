@@ -5,9 +5,12 @@ import PinType from "../../connection/PinType";
 
 export default class AndGate extends Component {
 
-    constructor(position: Vector2) {
+    constructor(
+    position: Vector2,
+    rotation = 0
+) {
 
-        super(position, 70, 60);
+        super(position, 70, 60, rotation);
         this.pins.push(
 
     new Pin(
@@ -46,10 +49,27 @@ this.pins.push(
 
     ctx.save();
 
-    ctx.translate(
-        this.position.x,
-        this.position.y
-    );
+ctx.translate(
+
+    this.position.x + this.width / 2,
+
+    this.position.y + this.height / 2
+
+);
+
+ctx.rotate(
+
+    this.rotation * Math.PI / 180
+
+);
+
+ctx.translate(
+
+    -this.width / 2,
+
+    -this.height / 2
+
+);
 
     ctx.fillStyle = "#2e2e2e";
 

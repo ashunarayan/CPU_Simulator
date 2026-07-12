@@ -9,6 +9,7 @@ export default class Wire {
 
     public vertices: Vector2[];
     public value: LogicState = LogicState.LOW;
+    public selected = false;
     constructor(from: Pin) {
 
         this.from = from;
@@ -122,4 +123,8 @@ public finish(pin: Pin): void {
     public isHigh():boolean{
         return this.value==LogicState.HIGH;
     }
+
+   
+
+
 }

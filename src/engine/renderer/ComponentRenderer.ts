@@ -31,6 +31,9 @@ export default class ComponentRenderer {
                 pin.setOwnerPosition(
                     component.position
                 );
+                pin.setOwnerRotation(
+    component.rotation
+);
 
                 const world =
                     pin.getWorldPosition();

@@ -6,9 +6,12 @@ import LogicState from "../../simulation/LogicState";
 
 export default class OutputLed extends Component {
 
-    constructor(position: Vector2) {
+    constructor(
+    position: Vector2,
+    rotation = 0
+) {
 
-        super(position, 18, 18);
+        super(position, 18, 18, rotation);
 
         this.pins.push(
 
@@ -37,19 +40,21 @@ export default class OutputLed extends Component {
             this.position.y
         );
 
-        // Small square body
-        ctx.fillStyle = "#303030";
-        ctx.strokeStyle = "#9E9E9E";
+        // Outer body
+        ctx.fillStyle = "#2B2B2B";
+        ctx.strokeStyle = "#909090";
         ctx.lineWidth = 2;
 
         ctx.beginPath();
+
         ctx.roundRect(
             0,
             0,
             18,
             18,
-            3
+            4
         );
+
         ctx.fill();
         ctx.stroke();
 
@@ -58,15 +63,17 @@ export default class OutputLed extends Component {
 
         if (on) {
 
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = 18;
             ctx.shadowColor = "#FF3B30";
+
             ctx.fillStyle = "#FF3B30";
 
         }
         else {
 
             ctx.shadowBlur = 0;
-            ctx.fillStyle = "#651111";
+
+            ctx.fillStyle = "#5A1414";
 
         }
 
@@ -82,8 +89,29 @@ export default class OutputLed extends Component {
 
         ctx.fill();
 
+        // White reflection
+        if (on) {
+
+            ctx.shadowBlur = 0;
+
+            ctx.fillStyle =
+                "rgba(255,255,255,0.6)";
+
+            ctx.beginPath();
+
+            ctx.arc(
+                7,
+                7,
+                1.5,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.fill();
+
+        }
+
         ctx.restore();
 
     }
-
 }

@@ -9,7 +9,9 @@ export default class EditorState {
 
     public mouseWorld = new Vector2();
 
-    public showGhost = true;
+    
+    // Placement Orientation
+public placementRotation = 0;
 
     // Component Drag
     public draggingComponent = false;

@@ -24,15 +24,57 @@ export default class WireRenderer {
         );
 
 
-        ctx.lineWidth = 2;
+
         ctx.setLineDash([]);
 
         for (const wire of circuit.getWires()) {
 
-            ctx.strokeStyle =
+            if (wire.selected) {
+
+                ctx.strokeStyle = "#FF9800";
+
+            }
+            else if (
+
                 wire.value === LogicState.HIGH
-                    ? "#2E7D32"
-                    : "#4FC3F7";
+
+            ) {
+
+                ctx.strokeStyle = "#2E7D32";
+
+            }
+            else {
+
+                ctx.strokeStyle = "#4FC3F7";
+
+            }
+
+            if (wire.value === LogicState.HIGH) {
+
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = "#43A047";
+
+            }
+            else {
+
+                ctx.shadowBlur = 0;
+
+            }
+            if (wire.selected) {
+
+                ctx.lineWidth = 4;
+
+            }
+            else if (wire.value === LogicState.HIGH) {
+
+                ctx.lineWidth = 3;
+
+            }
+            else {
+
+                ctx.lineWidth = 2;
+
+            }
 
             const fromComponent =
                 circuit.getComponentById(
@@ -44,6 +86,9 @@ export default class WireRenderer {
 
             wire.from.setOwnerPosition(
                 fromComponent.position
+            );
+            wire.from.setOwnerRotation(
+                fromComponent.rotation
             );
 
             ctx.beginPath();
@@ -81,6 +126,9 @@ export default class WireRenderer {
 
                     wire.to.setOwnerPosition(
                         toComponent.position
+                    );
+                    wire.to.setOwnerRotation(
+                        toComponent.rotation
                     );
 
                     const end =

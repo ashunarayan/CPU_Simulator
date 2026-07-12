@@ -2,13 +2,14 @@ import Component from "../base/Component";
 import Vector2 from "../../math/Vector2";
 import Pin from "../../connection/Pin";
 import PinType from "../../connection/PinType";
+import LogicState from "../../simulation/LogicState";
 
-export default class OrGate extends Component {
+export default class XorGate extends Component {
 
     constructor(
-    position: Vector2,
-    rotation = 0
-) {
+        position: Vector2,
+        rotation = 0
+    ) {
 
         super(position, 70, 60, rotation);
 
@@ -61,7 +62,7 @@ export default class OrGate extends Component {
 
         ctx.beginPath();
 
-        ctx.moveTo(5,0);
+        ctx.moveTo(5, 0);
 
         ctx.quadraticCurveTo(
             35,
@@ -100,7 +101,9 @@ export default class OrGate extends Component {
 
         this.pins[2].value =
 
-            a || b;
+            a !== b
+                ? LogicState.HIGH
+                : LogicState.LOW;
 
     }
 

@@ -13,11 +13,13 @@ export default abstract class Component {
     public height: number;
 
     public selected = false;
+    public rotation: number;
 
     constructor(
         position: Vector2,
         width: number,
-        height: number
+        height: number,
+        rotation=0
     ) {
 
         this.id = Component.nextId++;
@@ -27,6 +29,7 @@ export default abstract class Component {
         this.width = width;
 
         this.height = height;
+        this.rotation = rotation;
 
     }
 
@@ -45,6 +48,17 @@ export default abstract class Component {
         point.y >= this.position.y &&
 
         point.y <= this.position.y + this.height
+
+    );
+
+}
+public getCenter(): Vector2 {
+
+    return new Vector2(
+
+        this.width / 2,
+
+        this.height / 2
 
     );
 
@@ -75,6 +89,9 @@ public getPinAt(
         pin.setOwnerPosition(
             this.position
         );
+        pin.setOwnerRotation(
+    this.rotation
+);
 
         if (
             pin.contains(point)
@@ -95,6 +112,12 @@ public onClick(): void {
 public evaluate(): void {
 
     // Default: do nothing
+
+}
+public isVertical(): boolean {
+
+    return this.rotation === 90 ||
+           this.rotation === 270;
 
 }
 }
