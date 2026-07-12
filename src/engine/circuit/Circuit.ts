@@ -2,6 +2,7 @@ import Component from "../components/base/Component";
 import Vector2 from "../math/Vector2";
 import Wire from "../connection/Wire";
 import Pin from "../connection/Pin";
+import LogicState from "../simulation/LogicState";
 export default class Circuit {
 
     private components: Component[] = [];
@@ -114,4 +115,45 @@ public getComponentById(id: number): Component | null {
 
 }
 
+public simulate(): void {
+
+    // Pass 1
+    for (const component of this.components) {
+
+        component.evaluate();
+
+    }
+
+    for (const wire of this.wires) {
+
+        wire.value = wire.from.value;
+
+        if (wire.to) {
+
+            wire.to.value = wire.value;
+
+        }
+
+    }
+
+    // Pass 2
+    for (const component of this.components) {
+
+        component.evaluate();
+
+    }
+
+    for (const wire of this.wires) {
+
+        wire.value = wire.from.value;
+
+        if (wire.to) {
+
+            wire.to.value = wire.value;
+
+        }
+
+    }
+
+}
 }

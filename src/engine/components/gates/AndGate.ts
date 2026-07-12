@@ -88,4 +88,15 @@ this.pins.push(
     ctx.restore();
 
 }
+public override evaluate(): void {
+
+    const a = this.pins[0].value;
+
+    const b = this.pins[1].value;
+
+    this.pins[2].value =
+
+        a && b;
+
+}
 }

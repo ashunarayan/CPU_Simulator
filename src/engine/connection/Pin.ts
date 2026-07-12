@@ -1,6 +1,6 @@
 import Vector2 from "../math/Vector2";
 import PinType from "./PinType";
-
+import LogicState from "../simulation/LogicState";
 export default class Pin {
 
     public position: Vector2;
@@ -11,7 +11,7 @@ export default class Pin {
 
     public readonly ownerId: number;
 
-    public value = false;
+    public value: LogicState =LogicState.LOW;
 
     constructor(
         ownerId: number,

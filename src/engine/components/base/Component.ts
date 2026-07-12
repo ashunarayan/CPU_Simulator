@@ -89,4 +89,12 @@ public getPinAt(
     return null;
 
 }
+public onClick(): void {
+
+}
+public evaluate(): void {
+
+    // Default: do nothing
+
+}
 }

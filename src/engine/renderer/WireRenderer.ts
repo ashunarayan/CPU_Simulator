@@ -2,6 +2,7 @@ import Circuit from "../circuit/Circuit";
 import Camera from "../camera/camera";
 import Vector2 from "../math/Vector2";
 import Wire from "../connection/Wire";
+import LogicState from "../simulation/LogicState";
 export default class WireRenderer {
 
     public draw(
@@ -22,11 +23,16 @@ export default class WireRenderer {
             camera.zoom
         );
 
-        ctx.strokeStyle = "#4FC3F7";
+
         ctx.lineWidth = 2;
         ctx.setLineDash([]);
 
         for (const wire of circuit.getWires()) {
+
+            ctx.strokeStyle =
+                wire.value === LogicState.HIGH
+                    ? "#2E7D32"
+                    : "#4FC3F7";
 
             const fromComponent =
                 circuit.getComponentById(

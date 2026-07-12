@@ -11,6 +11,8 @@ import Tool from "../tools/Tool";
 import InputManager from "../input/InputManager";
 import EditorState from "../editor/EditorState";
 import WireRenderer from "./WireRenderer";
+import Switch from "../components/input/Switch";
+import OutputLed from "../components/input/OutputLed";
 
 
 export default class CanvasRenderer {
@@ -43,6 +45,24 @@ export default class CanvasRenderer {
         this.circuit.add(
             new AndGate(
                 new Vector2(200, 150)
+            )
+        );
+
+        this.circuit.add(
+            new OutputLed(
+                new Vector2(600, 200)
+            )
+        );
+
+        this.circuit.add(
+            new Switch(
+                new Vector2(80, 120)
+            )
+        );
+
+        this.circuit.add(
+            new Switch(
+                new Vector2(80, 220)
             )
         );
 
@@ -141,6 +161,17 @@ export default class CanvasRenderer {
             case Tool.NOT:
 
                 // later
+
+                break;
+            case Tool.SWITCH:
+
+                this.placeSwitch(e);
+
+                break;
+
+            case Tool.LED:
+
+                this.placeLed(e);
 
                 break;
 
@@ -245,6 +276,13 @@ export default class CanvasRenderer {
             this.circuit.getComponentAt(world);
 
         this.selectComponent(hit);
+        if (hit instanceof Switch) {
+
+            hit.onClick();
+
+            return;
+
+        }
 
         if (hit) {
 
@@ -397,6 +435,63 @@ export default class CanvasRenderer {
         );
 
     }
+    private placeSwitch(
+        e: MouseEvent
+    ): void {
+
+        const mouse = new Vector2(
+            e.offsetX,
+            e.offsetY
+        );
+
+        const world =
+            this.camera.screenToWorld(mouse);
+
+        const x =
+            Math.round(world.x / 20) * 20;
+
+        const y =
+            Math.round(world.y / 20) * 20;
+
+        this.circuit.add(
+
+            new Switch(
+
+                new Vector2(
+                    x,
+                    y
+                )
+
+            )
+
+        );
+
+    }
+    private placeLed(e: MouseEvent): void {
+
+        const mouse = new Vector2(
+            e.offsetX,
+            e.offsetY
+        );
+
+        const world =
+            this.camera.screenToWorld(mouse);
+
+        const x =
+            Math.round(world.x / 20) * 20;
+
+        const y =
+            Math.round(world.y / 20) * 20;
+
+        this.circuit.add(
+
+            new OutputLed(
+                new Vector2(x, y)
+            )
+
+        );
+
+    }
     private onWheel = (e: WheelEvent): void => {
 
         e.preventDefault();
@@ -464,6 +559,7 @@ export default class CanvasRenderer {
     private render = (): void => {
 
         this.clear();
+        this.circuit.simulate();
 
         this.gridRenderer.draw(
             this.ctx,
@@ -485,22 +581,22 @@ export default class CanvasRenderer {
 
         // Preview
         if (
-    this.editorState.currentWire
-) {
+            this.editorState.currentWire
+        ) {
 
-    this.wireRenderer.drawPreview(
+            this.wireRenderer.drawPreview(
 
-        this.ctx,
+                this.ctx,
 
-        this.editorState.currentWire,
+                this.editorState.currentWire,
 
-        this.editorState.mouseWorld,
+                this.editorState.mouseWorld,
 
-        this.camera
+                this.camera
 
-    );
+            );
 
-}
+        }
 
         requestAnimationFrame(this.render);
 

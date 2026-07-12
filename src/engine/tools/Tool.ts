@@ -16,6 +16,9 @@ enum Tool {
 
     CLOCK,
 
+    SWITCH,
+    LED,
+
 }
 
 export default Tool;

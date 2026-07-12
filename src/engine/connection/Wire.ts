@@ -1,6 +1,6 @@
 import Pin from "./Pin";
 import Vector2 from "../math/Vector2";
-
+import LogicState from "../simulation/LogicState";
 export default class Wire {
 
     public from: Pin;
@@ -8,7 +8,7 @@ export default class Wire {
     public to: Pin | null;
 
     public vertices: Vector2[];
-
+    public value: LogicState = LogicState.LOW;
     constructor(from: Pin) {
 
         this.from = from;
@@ -113,4 +113,13 @@ public finish(pin: Pin): void {
 
     }
 
+    public updateSignal():void{
+        this.value=this.from.value;
+        if(this.to){
+            this.to.value=this.value;
+        }
+    }
+    public isHigh():boolean{
+        return this.value==LogicState.HIGH;
+    }
 }
