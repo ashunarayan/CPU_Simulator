@@ -3,6 +3,7 @@ import Camera from "../camera/camera";
 import Vector2 from "../math/Vector2";
 import Wire from "../connection/Wire";
 import LogicState from "../simulation/LogicState";
+
 export default class WireRenderer {
 
     public draw(
@@ -23,89 +24,40 @@ export default class WireRenderer {
             camera.zoom
         );
 
-
-
         ctx.setLineDash([]);
 
         for (const wire of circuit.getWires()) {
 
-            if (wire.selected) {
-
+            if (wire.selected)
                 ctx.strokeStyle = "#FF9800";
-
-            }
-            else if (
-
-                wire.value === LogicState.HIGH
-
-            ) {
-
+            else if (wire.value === LogicState.HIGH)
                 ctx.strokeStyle = "#2E7D32";
-
-            }
-            else {
-
+            else
                 ctx.strokeStyle = "#4FC3F7";
 
-            }
-
-            if (wire.value === LogicState.HIGH) {
-
-                ctx.shadowBlur = 8;
-                ctx.shadowColor = "#43A047";
-
-            }
-            else {
-
-                ctx.shadowBlur = 0;
-
-            }
-            if (wire.selected) {
-
+            if (wire.selected)
                 ctx.lineWidth = 4;
-
-            }
-            else if (wire.value === LogicState.HIGH) {
-
+            else if (wire.value === LogicState.HIGH)
                 ctx.lineWidth = 3;
-
-            }
-            else {
-
+            else
                 ctx.lineWidth = 2;
 
+            if (wire.value === LogicState.HIGH) {
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = "#43A047";
+            } else {
+                ctx.shadowBlur = 0;
             }
-
-            const fromComponent =
-                circuit.getComponentById(
-                    wire.from.ownerId
-                );
-
-            if (!fromComponent)
-                continue;
-
-            wire.from.setOwnerPosition(
-                fromComponent.position
-            );
-            wire.from.setOwnerRotation(
-                fromComponent.rotation
-            );
 
             ctx.beginPath();
 
-            const start =
-                wire.from.getWorldPosition();
+            const start = wire.from.getWorldPosition();
 
-            ctx.moveTo(
-                start.x,
-                start.y
-            );
+            ctx.moveTo(start.x, start.y);
 
-            // Draw every stored vertex
             for (let i = 1; i < wire.vertices.length; i++) {
 
-                const vertex =
-                    wire.vertices[i];
+                const vertex = wire.vertices[i];
 
                 ctx.lineTo(
                     vertex.x,
@@ -114,32 +66,14 @@ export default class WireRenderer {
 
             }
 
-            // Draw final pin
             if (wire.to) {
 
-                const toComponent =
-                    circuit.getComponentById(
-                        wire.to.ownerId
-                    );
+                const end = wire.to.getWorldPosition();
 
-                if (toComponent) {
-
-                    wire.to.setOwnerPosition(
-                        toComponent.position
-                    );
-                    wire.to.setOwnerRotation(
-                        toComponent.rotation
-                    );
-
-                    const end =
-                        wire.to.getWorldPosition();
-
-                    ctx.lineTo(
-                        end.x,
-                        end.y
-                    );
-
-                }
+                ctx.lineTo(
+                    end.x,
+                    end.y
+                );
 
             }
 
@@ -150,7 +84,6 @@ export default class WireRenderer {
         ctx.restore();
 
     }
-
 
     public drawPreview(
         ctx: CanvasRenderingContext2D,
@@ -173,22 +106,17 @@ export default class WireRenderer {
 
         ctx.strokeStyle = "#FFD54F";
         ctx.lineWidth = 2;
-        ctx.setLineDash([8, 8]);
+        ctx.setLineDash([8,8]);
 
         ctx.beginPath();
 
-        const start =
-            wire.from.getWorldPosition();
+        const start = wire.from.getWorldPosition();
 
-        ctx.moveTo(
-            start.x,
-            start.y
-        );
+        ctx.moveTo(start.x,start.y);
 
-        // Draw committed vertices
-        for (let i = 1; i < wire.vertices.length; i++) {
+        for(let i=1;i<wire.vertices.length;i++){
 
-            const vertex = wire.vertices[i];
+            const vertex=wire.vertices[i];
 
             ctx.lineTo(
                 vertex.x,
@@ -197,11 +125,8 @@ export default class WireRenderer {
 
         }
 
-        // Last committed point
-        const last =
-            wire.getLastVertex();
+        const last=wire.getLastVertex();
 
-        // Orthogonal preview
         ctx.lineTo(
             mouse.x,
             last.y
@@ -217,4 +142,5 @@ export default class WireRenderer {
         ctx.restore();
 
     }
+
 }

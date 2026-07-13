@@ -16,7 +16,7 @@ export default class OutputLed extends Component {
         this.pins.push(
 
             new Pin(
-                this.id,
+                this,
                 new Vector2(0, 9),
                 PinType.INPUT
             )
@@ -29,16 +29,9 @@ export default class OutputLed extends Component {
         // Nothing to calculate.
     }
 
-    public draw(
+    protected drawShape(
         ctx: CanvasRenderingContext2D
     ): void {
-
-        ctx.save();
-
-        ctx.translate(
-            this.position.x,
-            this.position.y
-        );
 
         // Outer body
         ctx.fillStyle = "#2B2B2B";
@@ -110,8 +103,6 @@ export default class OutputLed extends Component {
             ctx.fill();
 
         }
-
-        ctx.restore();
 
     }
 }

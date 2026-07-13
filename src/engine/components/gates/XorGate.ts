@@ -15,7 +15,7 @@ export default class XorGate extends Component {
 
         this.pins.push(
             new Pin(
-                this.id,
+                this,
                 new Vector2(0, 15),
                 PinType.INPUT
             )
@@ -23,7 +23,7 @@ export default class XorGate extends Component {
 
         this.pins.push(
             new Pin(
-                this.id,
+                this,
                 new Vector2(0, 45),
                 PinType.INPUT
             )
@@ -31,7 +31,7 @@ export default class XorGate extends Component {
 
         this.pins.push(
             new Pin(
-                this.id,
+                this,
                 new Vector2(70, 30),
                 PinType.OUTPUT
             )
@@ -39,16 +39,9 @@ export default class XorGate extends Component {
 
     }
 
-    public draw(
+    protected drawShape(
         ctx: CanvasRenderingContext2D
     ): void {
-
-        ctx.save();
-
-        ctx.translate(
-            this.position.x,
-            this.position.y
-        );
 
         ctx.fillStyle = "#2e2e2e";
 
@@ -88,8 +81,6 @@ export default class XorGate extends Component {
         ctx.fill();
 
         ctx.stroke();
-
-        ctx.restore();
 
     }
 

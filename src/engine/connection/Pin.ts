@@ -1,58 +1,51 @@
 import Vector2 from "../math/Vector2";
 import PinType from "./PinType";
 import LogicState from "../simulation/LogicState";
+import type Component from "../components/base/Component";
+
 export default class Pin {
 
+    // Local, unrotated offset from the owner's top-left corner.
     public position: Vector2;
-
-    private ownerPosition = new Vector2();
 
     public readonly type: PinType;
 
-    public readonly ownerId: number;
+    public value: LogicState = LogicState.LOW;
 
-    public value: LogicState =LogicState.LOW;
-    private ownerRotation = 0;
+    // Set true once a wire fully connects to this pin (see Wire.finish()).
+    // Component.canRotate() reads this to permanently lock rotation.
+    private connectionCount = 0;
+
+    private readonly owner: Component;
 
     constructor(
-        ownerId: number,
+        owner: Component,
         position: Vector2,
         type: PinType
     ) {
 
-        this.ownerId = ownerId;
+        this.owner = owner;
         this.position = position;
         this.type = type;
 
     }
 
-    public setOwnerPosition(
-        position: Vector2
-    ): void {
+    // Kept for anything elsewhere that still keys off ownerId.
+    public get ownerId(): number {
 
-        this.ownerPosition = position;
+        return this.owner.id;
 
     }
-    public setOwnerRotation(
-    rotation: number
-): void {
 
-    this.ownerRotation = rotation;
-
-}
-
+    // The owner is the single source of truth for position + rotation,
+    // so this can never go stale the way a manually-synced copy could.
     public getWorldPosition(): Vector2 {
 
-        return this.ownerPosition.add(
-            this.position
-        );
+        return this.owner.localToWorld(this.position);
 
     }
-    
-    
-    public contains(
-        point: Vector2
-    ): boolean {
+
+    public contains(point: Vector2): boolean {
 
         const world =
             this.getWorldPosition();
@@ -66,5 +59,27 @@ export default class Pin {
         return dx * dx + dy * dy <= 36;
 
     }
+
+    public connect(): void {
+
+    this.connectionCount++;
+
+}
+
+public disconnect(): void {
+
+    if (this.connectionCount > 0) {
+
+        this.connectionCount--;
+
+    }
+
+}
+
+public isConnected(): boolean {
+
+    return this.connectionCount > 0;
+
+}
 
 }

@@ -11,10 +11,11 @@ export default class AndGate extends Component {
 ) {
 
         super(position, 70, 60, rotation);
+        console.log("NOT CREATED");
         this.pins.push(
 
     new Pin(
-        this.id,
+        this,
         new Vector2(0, 15),
         PinType.INPUT
     )
@@ -24,7 +25,7 @@ export default class AndGate extends Component {
 this.pins.push(
 
     new Pin(
-        this.id,
+        this,
         new Vector2(0, 45),
         PinType.INPUT
     )
@@ -34,7 +35,7 @@ this.pins.push(
 this.pins.push(
 
     new Pin(
-        this.id,
+        this,
         new Vector2(70, 30),
         PinType.OUTPUT
     )
@@ -43,34 +44,12 @@ this.pins.push(
 
     }
 
-    public draw(
+    // Local, unrotated coordinates only - Component.draw() handles the
+    // rotation transform before calling this.
+    protected drawShape(
     ctx: CanvasRenderingContext2D
 ): void {
-
-    ctx.save();
-
-ctx.translate(
-
-    this.position.x + this.width / 2,
-
-    this.position.y + this.height / 2
-
-);
-
-ctx.rotate(
-
-    this.rotation * Math.PI / 180
-
-);
-
-ctx.translate(
-
-    -this.width / 2,
-
-    -this.height / 2
-
-);
-
+     
     ctx.fillStyle = "#2e2e2e";
 
     ctx.strokeStyle =
@@ -104,8 +83,6 @@ ctx.translate(
     ctx.fill();
 
     ctx.stroke();
-
-    ctx.restore();
 
 }
 public override evaluate(): void {

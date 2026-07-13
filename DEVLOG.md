@@ -116,3 +116,20 @@ Added live wire preview while routing.
 Fixed multiple routing/rendering bugs.
 Improved renderer architecture by separating wire storage from drawing logic.
 Refactored wire path handling using vertex-based routing.
+
+Day4 and Day 5 - Digital Logic Simulation
+
+Today the simulator became interactive instead of just a drawing tool.
+
+Implemented:
+• Switch component for HIGH/LOW input
+• Output LED with live state visualization
+• AND, OR, NOT and XOR gate logic
+• Logic propagation through wires
+• Wire color changes for LOW/HIGH states
+• Delete selected wires
+• ESC to cancel unfinished wire routing
+
+Started planning component rotation architecture, but postponed implementation after identifying that pin rotation, hit detection, and wire connections should be designed together instead of patched separately.
+
+The editor now behaves much closer to a real digital logic simulator.

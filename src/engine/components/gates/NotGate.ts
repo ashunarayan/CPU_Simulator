@@ -15,7 +15,7 @@ export default class NotGate extends Component {
         this.pins.push(
 
             new Pin(
-                this.id,
+                this,
                 new Vector2(0,20),
                 PinType.INPUT
             )
@@ -25,7 +25,7 @@ export default class NotGate extends Component {
         this.pins.push(
 
             new Pin(
-                this.id,
+                this,
                 new Vector2(60,20),
                 PinType.OUTPUT
             )
@@ -34,16 +34,9 @@ export default class NotGate extends Component {
 
     }
 
-    public draw(
+    protected drawShape(
         ctx:CanvasRenderingContext2D
     ):void{
-
-        ctx.save();
-
-        ctx.translate(
-            this.position.x,
-            this.position.y
-        );
 
         ctx.fillStyle="#2e2e2e";
 
@@ -82,8 +75,6 @@ export default class NotGate extends Component {
         ctx.fill();
 
         ctx.stroke();
-
-        ctx.restore();
 
     }
 

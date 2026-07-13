@@ -18,7 +18,7 @@ export default class Switch extends Component {
         this.pins.push(
 
             new Pin(
-                this.id,
+                this,
                 new Vector2(50, 15),
                 PinType.OUTPUT
             )
@@ -47,16 +47,9 @@ export default class Switch extends Component {
 
     }
 
-   public draw(
+   protected drawShape(
     ctx: CanvasRenderingContext2D
 ): void {
-
-    ctx.save();
-
-    ctx.translate(
-        this.position.x,
-        this.position.y
-    );
 
     // Body
     ctx.fillStyle = "#2A2A2A";
@@ -113,8 +106,6 @@ export default class Switch extends Component {
     );
 
     ctx.fill();
-
-    ctx.restore();
 
 }
 public override onClick(): void {

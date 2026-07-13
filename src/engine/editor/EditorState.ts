@@ -9,20 +9,15 @@ export default class EditorState {
 
     public mouseWorld = new Vector2();
 
-    
-    // Placement Orientation
-public placementRotation = 0;
+    public placementRotation = 0;
 
-    // Component Drag
     public draggingComponent = false;
 
     public dragOffset = new Vector2();
 
     public selectedComponent: Component | null = null;
 
-    // Wire Tool
     public wiring = false;
 
     public currentWire: Wire | null = null;
-
 }

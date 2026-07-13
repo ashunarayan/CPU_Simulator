@@ -3,6 +3,7 @@ import GridRenderer from "./GridRenderer";
 import Vector2 from "../math/Vector2";
 import Circuit from "../circuit/Circuit";
 import Wire from "../connection/Wire";
+import Junction from "../connection/Junction";
 import AndGate from "../components/gates/AndGate";
 import Component from "../components/base/Component";
 import ComponentRenderer from "./ComponentRenderer";
@@ -16,7 +17,7 @@ import OutputLed from "../components/input/OutputLed";
 import OrGate from "../components/gates/OrGate";
 import NotGate from "../components/gates/NotGate";
 import XorGate from "../components/gates/XorGate";
-
+import JunctionRenderer from "./JunctionRenderer";
 
 
 export default class CanvasRenderer {
@@ -37,9 +38,12 @@ export default class CanvasRenderer {
     private inputManager: InputManager;
     private wireRenderer =
         new WireRenderer();
+    private junctionRenderer =
+        new JunctionRenderer();
 
 
     constructor(canvas: HTMLCanvasElement) {
+        console.log("CanvasRenderer CREATED");
         this.canvas = canvas;
         this.camera = new Camera();
         this.toolManager = ToolManager;
@@ -69,6 +73,15 @@ export default class CanvasRenderer {
                 new Vector2(80, 220)
             )
         );
+        this.circuit.addJunction(
+
+    new Junction(
+
+        new Vector2(400,200)
+
+    )
+
+);
 
         this.canvas.addEventListener("wheel", this.onWheel);
 
@@ -265,7 +278,7 @@ export default class CanvasRenderer {
             return;
 
         }
-        if (this.editorState.wiring) {
+        if (this.editorState.currentWire !== null) {
 
             return;
 
@@ -292,57 +305,64 @@ export default class CanvasRenderer {
 
     private onLeftMouseDown(e: MouseEvent): void {
 
-    const mouse = new Vector2(
-        e.offsetX,
-        e.offsetY
-    );
+        const mouse = new Vector2(
+            e.offsetX,
+            e.offsetY
+        );
 
-    const world =
-        this.camera.screenToWorld(mouse);
+        const world =
+            this.camera.screenToWorld(mouse);
 
-    // -------------------------
-    // Check Component
-    // -------------------------
+        // -------------------------
+        // Check Component
+        // -------------------------
 
-    const hit =
-        this.circuit.getComponentAt(world);
+        const hit =
+            this.circuit.getComponentAt(world);
 
-    if (hit) {
+        if (hit) {
 
-        this.selectWire(null);
+            this.selectWire(null);
 
-        this.selectComponent(hit);
+            this.selectComponent(hit);
 
-        // Toggle switch
-        if (hit instanceof Switch) {
+            // Toggle switch
+            if (hit instanceof Switch) {
 
-            hit.onClick();
+                hit.onClick();
+
+                this.circuit.simulate();
+
+                return;
+
+            }
+
+            this.editorState.draggingComponent = true;
+
+            this.editorState.dragOffset =
+                world.subtract(hit.position);
 
             return;
 
         }
 
-        this.editorState.draggingComponent = true;
 
-        this.editorState.dragOffset =
-            world.subtract(hit.position);
 
-        return;
+
+
+
+        // -------------------------
+        // Check Wire
+        // -------------------------
+
+        const wire =
+            this.circuit.getWireAt(world);
+
+        this.selectComponent(null);
+
+        this.selectWire(wire);
 
     }
-
-    // -------------------------
-    // Check Wire
-    // -------------------------
-
-    const wire =
-        this.circuit.getWireAt(world);
-
-    this.selectComponent(null);
-
-    this.selectWire(wire);
-
-}
 
 
     private onWireClick(
@@ -375,16 +395,15 @@ export default class CanvasRenderer {
             if (!pin)
                 return;
 
-            pin.setOwnerPosition(
-                this.circuit
-                    .getComponentById(pin.ownerId)!
-                    .position
-            );
-
-            this.editorState.currentWire =
-                new Wire(pin);
-
+            // Pin.getWorldPosition() now reads directly from its owner
+            // component, so no manual position/rotation sync is needed
+            // here (this used to be a stale-data hack, and it never
+            // even accounted for rotation).
+            this.editorState.currentWire = new Wire(pin);
             this.editorState.wiring = true;
+            return;
+
+
 
             return;
 
@@ -405,12 +424,8 @@ export default class CanvasRenderer {
             endPin !== wire.from
         ) {
 
-            endPin.setOwnerPosition(
-                this.circuit
-                    .getComponentById(endPin.ownerId)!
-                    .position
-            );
-
+            // Wire.finish() marks both pins as connected, which
+            // permanently locks rotation on both components involved.
             wire.finish(endPin);
 
             wire.addVertex(
@@ -421,8 +436,9 @@ export default class CanvasRenderer {
 
             this.editorState.currentWire = null;
             this.editorState.wiring = false;
-
             return;
+
+
 
         }
 
@@ -438,61 +454,82 @@ export default class CanvasRenderer {
 
 
     private onKeyDown = (
-    e: KeyboardEvent
-): void => {
+        e: KeyboardEvent
+    ): void => {
 
-    // Delete
-    if (e.key === "Delete") {
+        // Delete
+        if (e.key === "Delete") {
 
-        // Delete selected component
-        if (this.editorState.selectedComponent) {
+            // Delete selected component
+            if (this.editorState.selectedComponent) {
 
-            this.circuit.remove(
-                this.editorState.selectedComponent
-            );
+                this.circuit.remove(
+                    this.editorState.selectedComponent
+                );
 
-            this.editorState.selectedComponent = null;
+                this.editorState.selectedComponent = null;
+
+                return;
+
+            }
+
+            // Delete selected wire
+            const wire =
+                this.circuit.getSelectedWire();
+
+            if (wire) {
+
+                this.circuit.removeWire(wire);
+
+                return;
+
+            }
+
+        }
+
+        // Cancel wire drawing
+        if (
+            e.key === "Escape" &&
+            this.editorState.currentWire
+        ) {
+
+            this.editorState.currentWire = null;
+            this.editorState.wiring = false;
+
+
 
             return;
 
         }
+        if (e.key === "r" || e.key === "R") {
 
-        // Delete selected wire
-        const wire =
-            this.circuit.getSelectedWire();
+            const selected =
+                this.editorState.selectedComponent;
 
-        if (wire) {
+            // If something is selected, R rotates that placed component
+            // directly (Component.rotate() is a no-op once it has a
+            // connected wire). Otherwise R cycles the rotation that will
+            // be used for the next newly-placed component.
+            if (
+                this.toolManager.getTool() === Tool.SELECT &&
+                selected
+            ) {
 
-            this.circuit.removeWire(wire);
+                selected.rotate();
+
+            }
+            else {
+
+                this.editorState.placementRotation =
+                    (this.editorState.placementRotation + 90) % 360;
+
+            }
 
             return;
 
         }
 
     }
-
-    // Cancel wire drawing
-    if (
-        e.key === "Escape" &&
-        this.editorState.currentWire
-    ) {
-
-        this.editorState.currentWire = null;
-
-        this.editorState.wiring = false;
-
-        return;
-
-    }
-    if (e.key === "r" || e.key === "R") {
-
-    this.editorState.placementRotation =
-
-        (this.editorState.placementRotation + 90) % 360;
-
-}
-
-}
 
 
 
@@ -515,10 +552,16 @@ export default class CanvasRenderer {
         this.circuit.add(
 
             new AndGate(
-                new Vector2(x, y)
+                new Vector2(x, y),
+                this.editorState.placementRotation
             )
-
         );
+        console.log(
+            "COUNT =",
+            this.circuit.getComponents().length
+        );
+
+        this.toolManager.setTool(Tool.SELECT);
 
     }
 
@@ -541,11 +584,12 @@ export default class CanvasRenderer {
         this.circuit.add(
 
             new OrGate(
-                new Vector2(x, y)
+                new Vector2(x, y),
+                this.editorState.placementRotation
             )
 
         );
-
+        this.toolManager.setTool(Tool.SELECT);
     }
 
 
@@ -568,10 +612,12 @@ export default class CanvasRenderer {
         this.circuit.add(
 
             new NotGate(
-                new Vector2(x, y)
+                new Vector2(x, y),
+                this.editorState.placementRotation
             )
 
         );
+        this.toolManager.setTool(Tool.SELECT);
 
     }
 
@@ -594,10 +640,12 @@ export default class CanvasRenderer {
         this.circuit.add(
 
             new XorGate(
-                new Vector2(x, y)
+                new Vector2(x, y),
+                this.editorState.placementRotation
             )
 
         );
+        this.toolManager.setTool(Tool.SELECT);
 
     }
 
@@ -627,11 +675,13 @@ export default class CanvasRenderer {
                 new Vector2(
                     x,
                     y
-                )
+                ),
+                this.editorState.placementRotation
 
             )
 
         );
+        this.toolManager.setTool(Tool.SELECT);
 
     }
     private placeLed(e: MouseEvent): void {
@@ -653,12 +703,18 @@ export default class CanvasRenderer {
         this.circuit.add(
 
             new OutputLed(
-                new Vector2(x, y)
+                new Vector2(x, y),
+                this.editorState.placementRotation
             )
 
         );
+        this.toolManager.setTool(Tool.SELECT);
 
     }
+
+
+
+
     private onWheel = (e: WheelEvent): void => {
 
         e.preventDefault();
@@ -724,21 +780,21 @@ export default class CanvasRenderer {
 
     public getMouseWorld(): Vector2 {
 
-    return this.editorState.mouseWorld;
+        return this.editorState.mouseWorld;
 
-}
+    }
 
-public getZoom(): number {
+    public getZoom(): number {
 
-    return this.camera.zoom;
+        return this.camera.zoom;
 
-}
+    }
 
-public getCurrentTool(): Tool {
+    public getCurrentTool(): Tool {
 
-    return this.toolManager.getTool();
+        return this.toolManager.getTool();
 
-}
+    }
 
 
     private render = (): void => {
@@ -783,9 +839,18 @@ public getCurrentTool(): Tool {
 
         }
 
+        this.junctionRenderer.draw(
+
+    this.ctx,
+
+    this.circuit,
+
+    this.camera
+
+);
+
         requestAnimationFrame(this.render);
 
     }
 
 }
-

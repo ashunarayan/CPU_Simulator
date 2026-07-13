@@ -2,18 +2,31 @@ import Component from "../components/base/Component";
 import Vector2 from "../math/Vector2";
 import Wire from "../connection/Wire";
 import Pin from "../connection/Pin";
-//import Junction from "../connection/Junction";
+import Junction from "../connection/Junction";
 import LogicState from "../simulation/LogicState";
 export default class Circuit {
 
     private components: Component[] = [];
     private wires: Wire[] = [];
-
+    private junctions: Junction[] = [];
     public add(component: Component): void {
-
+       
         this.components.push(component);
 
     }
+    public addJunction(
+    junction: Junction
+): void {
+
+    this.junctions.push(junction);
+
+}
+public getJunctions(): Junction[] {
+
+    return this.junctions;
+
+}
+
 
     public getComponents(): Component[] {
 

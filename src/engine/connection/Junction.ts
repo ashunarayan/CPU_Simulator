@@ -1,14 +1,16 @@
 import Vector2 from "../math/Vector2";
-import Wire from "./Wire";
+import LogicState from "../simulation/LogicState";
 
 export default class Junction {
 
-    constructor(
+    public position: Vector2;
 
-        public position: Vector2,
+    public value = LogicState.LOW;
 
-        public wires: Wire[] = []
+    constructor(position: Vector2) {
 
-    ) {}
+        this.position = position;
+
+    }
 
 }

@@ -23,15 +23,15 @@ function App() {
   useEffect(() => {
 
     if (!canvasRef.current)
-      return;
+        return;
+
+    if (rendererRef.current)
+        return;
 
     rendererRef.current =
+        new CanvasRenderer(canvasRef.current);
 
-      new CanvasRenderer(
-        canvasRef.current
-      );
-
-  }, []);
+}, []);
 
   useEffect(() => {
 
