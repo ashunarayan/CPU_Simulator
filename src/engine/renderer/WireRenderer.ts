@@ -7,83 +7,82 @@ import LogicState from "../simulation/LogicState";
 export default class WireRenderer {
 
     public draw(
-        ctx: CanvasRenderingContext2D,
-        circuit: Circuit,
-        camera: Camera
-    ): void {
+    ctx: CanvasRenderingContext2D,
+    circuit: Circuit,
+    camera: Camera
+): void {
 
-        ctx.save();
+    ctx.save();
 
-        ctx.translate(
-            -camera.position.x * camera.zoom,
-            -camera.position.y * camera.zoom
-        );
+    ctx.translate(
+        -camera.position.x * camera.zoom,
+        -camera.position.y * camera.zoom
+    );
 
-        ctx.scale(
-            camera.zoom,
-            camera.zoom
-        );
+    ctx.scale(
+        camera.zoom,
+        camera.zoom
+    );
 
-        ctx.setLineDash([]);
+    ctx.setLineDash([]);
 
-        for (const wire of circuit.getWires()) {
+    for (const wire of circuit.getWires()) {
 
-            if (wire.selected)
-                ctx.strokeStyle = "#FF9800";
-            else if (wire.value === LogicState.HIGH)
-                ctx.strokeStyle = "#2E7D32";
-            else
-                ctx.strokeStyle = "#4FC3F7";
+        if (wire.selected)
+            ctx.strokeStyle = "#FF9800";
+        else if (wire.value === LogicState.HIGH)
+            ctx.strokeStyle = "#2E7D32";
+        else
+            ctx.strokeStyle = "#4FC3F7";
 
-            if (wire.selected)
-                ctx.lineWidth = 4;
-            else if (wire.value === LogicState.HIGH)
-                ctx.lineWidth = 3;
-            else
-                ctx.lineWidth = 2;
+        if (wire.selected)
+            ctx.lineWidth = 4;
+        else if (wire.value === LogicState.HIGH)
+            ctx.lineWidth = 3;
+        else
+            ctx.lineWidth = 2;
 
-            if (wire.value === LogicState.HIGH) {
-                ctx.shadowBlur = 8;
-                ctx.shadowColor = "#43A047";
-            } else {
-                ctx.shadowBlur = 0;
-            }
+        if (wire.value === LogicState.HIGH) {
 
-            ctx.beginPath();
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = "#43A047";
 
-            const start = wire.from.getWorldPosition();
+        } else {
 
-            ctx.moveTo(start.x, start.y);
-
-            for (let i = 1; i < wire.vertices.length; i++) {
-
-                const vertex = wire.vertices[i];
-
-                ctx.lineTo(
-                    vertex.x,
-                    vertex.y
-                );
-
-            }
-
-            if (wire.to) {
-
-                const end = wire.to.getWorldPosition();
-
-                ctx.lineTo(
-                    end.x,
-                    end.y
-                );
-
-            }
-
-            ctx.stroke();
+            ctx.shadowBlur = 0;
 
         }
 
-        ctx.restore();
+        ctx.beginPath();
+
+        const start = wire.from.getWorldPosition();
+
+        ctx.moveTo(start.x, start.y);
+
+        // draw stored bends
+        for (let i = 1; i < wire.vertices.length; i++) {
+
+            const v = wire.vertices[i];
+
+            ctx.lineTo(v.x, v.y);
+
+        }
+
+        if (wire.to) {
+
+            const end = wire.to.getWorldPosition();
+
+            ctx.lineTo(end.x, end.y);
+
+        }
+
+        ctx.stroke();
 
     }
+
+    ctx.restore();
+
+}
 
     public drawPreview(
         ctx: CanvasRenderingContext2D,

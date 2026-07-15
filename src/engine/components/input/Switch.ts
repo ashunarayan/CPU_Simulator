@@ -113,4 +113,23 @@ public override onClick(): void {
     this.toggle();
 
 }
+
+public override serialize() {
+
+    return {
+
+        ...super.serialize(),
+
+        state: this.state
+
+    };
+
+}
+public setState(state: LogicState): void {
+
+    this.state = state;
+
+    this.pins[0].value = state;
+
+}
 }

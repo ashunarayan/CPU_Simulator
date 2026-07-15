@@ -26,9 +26,14 @@ body,
     flex-direction:column;
 }
 
-.topbar{
+/* ---------------------------------- */
+/* Toolbar - single 42px row          */
+/* ---------------------------------- */
 
-    height:52px;
+.toolbar{
+
+    height:42px;
+    min-height:42px;
 
     background:#232323;
 
@@ -38,26 +43,79 @@ body,
 
     align-items:center;
 
-    justify-content:space-between;
+    gap:8px;
 
-    padding:0 20px;
+    padding:0 10px;
 
     color:white;
+
 }
 
-.logo{
+.toolbar-divider{
 
-    font-size:20px;
+    width:1px;
+
+    height:24px;
+
+    background:#3a3a3a;
+
+}
+
+.toolbar-tools{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:6px;
+
+}
+
+.toolbar button,
+.toolbar-file{
+
+    height:28px;
+
+    padding:0 12px;
+
+    border:none;
+
+    border-radius:4px;
+
+    background:#2b2b2b;
+
+    color:white;
+
+    font-size:13px;
 
     font-weight:600;
 
-    letter-spacing:1px;
+    white-space:nowrap;
+
+    cursor:pointer;
+
+    transition:background .15s, transform .15s;
+
 }
 
-.version{
+.toolbar button:hover,
+.toolbar-file:hover{
 
-    color:#9ca3af;
+    background:#3c82f6;
+
 }
+
+.toolbar button.active-tool{
+
+    background:#4FC3F7;
+
+    color:#fff;
+
+}
+
+/* ---------------------------------- */
+/* Workspace / canvas                 */
+/* ---------------------------------- */
 
 .workspace{
 
@@ -66,24 +124,7 @@ body,
     display:flex;
 
     overflow:hidden;
-}
 
-.left-panel{
-
-    width:70px;
-
-    background:#212121;
-
-    border-right:1px solid #343434;
-}
-
-.right-panel{
-
-    width:280px;
-
-    background:#212121;
-
-    border-left:1px solid #343434;
 }
 
 .canvas-container{
@@ -93,89 +134,63 @@ body,
     position:relative;
 
     background:#181818;
+
 }
 
-#canvas{
+#canvas,
+.editor-canvas{
 
     width:100%;
 
     height:100%;
 
     display:block;
+
 }
+.file-dropdown{
 
-.statusbar{
+position:absolute;
 
-    height:28px;
+top:46px;
 
-    background:#232323;
+left:10px;
 
-    border-top:1px solid #3a3a3a;
+display:flex;
 
-    display:flex;
+flex-direction:column;
 
-    align-items:center;
+background:#2d2d2d;
 
-    justify-content:space-between;
+border:1px solid #555;
 
-    padding:0 15px;
+border-radius:6px;
 
-    color:#9ca3af;
+overflow:hidden;
 
-    font-size:13px;
-}
-.editor-canvas {
-    width: 100%;
-    height: 100%;
-    display: block;
-}
-
-.left-panel{
-
-    width:90px;
-
-    background:#1d1d1d;
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:10px;
-
-    padding:10px;
-
-    border-right:1px solid #333;
+z-index:1000;
 
 }
 
-.left-panel button{
+.file-dropdown button{
 
-    height:42px;
+background:none;
 
-    border:none;
+border:none;
 
-    border-radius:8px;
+color:white;
 
-    background:#2b2b2b;
+padding:10px 18px;
 
-    color:white;
+text-align:left;
 
-    cursor:pointer;
+cursor:pointer;
 
-    transition:.2s;
-
-    font-weight:600;
+min-width:180px;
 
 }
 
-.left-panel button:hover{
+.file-dropdown button:hover{
 
-    background:#3c82f6;
+background:#444;
 
-    transform:scale(1.05);
-
-}
-.active-tool{
-    background:#4FC3F7;
-    color:white;
 }

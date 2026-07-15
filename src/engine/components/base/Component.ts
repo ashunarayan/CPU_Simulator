@@ -131,6 +131,11 @@ export default abstract class Component {
     );
 
 }
+public isSequential(): boolean {
+
+    return false;
+
+}
 
 
 
@@ -200,6 +205,8 @@ export default abstract class Component {
 
     }
 
+
+
     // --- Rotation -----------------------------------------------------
     // A component can rotate freely as long as none of its pins have a
     // wire attached. The instant one connects, this permanently locks -
@@ -223,5 +230,23 @@ export default abstract class Component {
         this.rotation = (this.rotation + 90) % 360;
 
     }
+
+    public serialize() {
+
+    return {
+
+        id: this.id,
+
+        type: this.constructor.name,
+
+        x: this.position.x,
+
+        y: this.position.y,
+
+        rotation: this.rotation
+
+    };
+
+}
 
 }

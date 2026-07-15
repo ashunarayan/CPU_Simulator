@@ -20,4 +20,13 @@ export default class EditorState {
     public wiring = false;
 
     public currentWire: Wire | null = null;
+
+    public selectedComponents: Component[] = [];
+
+    public selectionBoxActive = false;
+
+    public selectionStart = new Vector2();
+
+    public selectionEnd = new Vector2();
+    public multiDragOffsets = new Map<Component, Vector2>();
 }

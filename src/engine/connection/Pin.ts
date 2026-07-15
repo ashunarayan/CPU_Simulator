@@ -81,5 +81,10 @@ public isConnected(): boolean {
     return this.connectionCount > 0;
 
 }
+public getIndex(): number {
+
+    return this.owner.getPins().indexOf(this);
+
+}
 
 }

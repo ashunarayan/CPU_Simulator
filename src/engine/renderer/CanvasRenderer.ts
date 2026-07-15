@@ -18,6 +18,12 @@ import OrGate from "../components/gates/OrGate";
 import NotGate from "../components/gates/NotGate";
 import XorGate from "../components/gates/XorGate";
 import JunctionRenderer from "./JunctionRenderer";
+import CircuitSerializer
+    from "../serialization/CircuitSerializer";
+import CircuitDeserializer
+    from "../serialization/CircuitDeserializer";
+import DFlipFlop
+    from "../components/sequential/DFlipFlop";
 
 
 export default class CanvasRenderer {
@@ -40,6 +46,11 @@ export default class CanvasRenderer {
         new WireRenderer();
     private junctionRenderer =
         new JunctionRenderer();
+    private serializer =
+        new CircuitSerializer();
+    private deserializer =
+        new CircuitDeserializer();
+
 
 
     constructor(canvas: HTMLCanvasElement) {
@@ -50,38 +61,14 @@ export default class CanvasRenderer {
         this.gridRenderer = new GridRenderer();
         this.circuit = new Circuit();
 
-        this.circuit.add(
-            new AndGate(
-                new Vector2(200, 150)
-            )
-        );
+        
 
-        this.circuit.add(
-            new OutputLed(
-                new Vector2(600, 200)
-            )
-        );
+        
 
-        this.circuit.add(
-            new Switch(
-                new Vector2(80, 120)
-            )
-        );
+        
 
-        this.circuit.add(
-            new Switch(
-                new Vector2(80, 220)
-            )
-        );
-        this.circuit.addJunction(
-
-    new Junction(
-
-        new Vector2(400,200)
-
-    )
-
-);
+        
+        
 
         this.canvas.addEventListener("wheel", this.onWheel);
 
@@ -129,6 +116,14 @@ export default class CanvasRenderer {
 
             component.selected = true;
 
+            this.editorState.selectedComponents = [];
+
+            if (component) {
+
+                this.editorState.selectedComponents.push(component);
+
+            }
+
             this.editorState.selectedComponent = component;
 
         }
@@ -139,6 +134,8 @@ export default class CanvasRenderer {
         }
 
     }
+
+
 
     private selectWire(
         wire: Wire | null
@@ -214,7 +211,11 @@ export default class CanvasRenderer {
 
                 break;
 
+            case Tool.D_FLIP_FLOP:
 
+                this.placeDFlipFlop(e);
+
+                break;
 
         }
 
@@ -225,6 +226,33 @@ export default class CanvasRenderer {
         this.dragging = false;
 
         this.editorState.draggingComponent = false;
+
+        if (this.editorState.selectionBoxActive) {
+
+            this.editorState.selectionBoxActive = false;
+
+            const selected =
+                this.circuit.getComponentsInside(
+
+                    this.editorState.selectionStart,
+
+                    this.editorState.selectionEnd
+
+                );
+
+            this.circuit.clearSelection();
+
+            this.editorState.selectedComponents = [];
+
+            for (const component of selected) {
+
+                component.selected = true;
+
+                this.editorState.selectedComponents.push(component);
+
+            }
+
+        }
 
     }
 
@@ -266,19 +294,66 @@ export default class CanvasRenderer {
 
                 Math.round(position.y / 20) * 20;
 
-            this.editorState.selectedComponent.moveTo(
+            if (this.editorState.selectedComponents.length > 1 &&
+                this.editorState.selectedComponent?.selected) {
 
-                new Vector2(
-                    snappedX,
-                    snappedY
-                )
+                for (const component of this.editorState.selectedComponents) {
 
-            );
+                    const offset =
+                        this.editorState.multiDragOffsets.get(component)!;
+
+                    const position =
+                        world.subtract(offset);
+
+                    component.moveTo(
+
+                        new Vector2(
+
+                            Math.round(position.x / 20) * 20,
+
+                            Math.round(position.y / 20) * 20
+
+                        )
+
+                    );
+
+                }
+
+            }
+            else {
+
+                const position =
+                    world.subtract(
+                        this.editorState.dragOffset
+                    );
+
+                this.editorState.selectedComponent!.moveTo(
+
+                    new Vector2(
+
+                        Math.round(position.x / 20) * 20,
+
+                        Math.round(position.y / 20) * 20
+
+                    )
+
+                );
+
+            }
 
             return;
 
         }
         if (this.editorState.currentWire !== null) {
+
+            return;
+
+        }
+
+        if (this.editorState.selectionBoxActive) {
+
+            this.editorState.selectionEnd =
+                this.camera.screenToWorld(mouse);
 
             return;
 
@@ -303,6 +378,9 @@ export default class CanvasRenderer {
 
     }
 
+
+
+
     private onLeftMouseDown(e: MouseEvent): void {
 
         const mouse = new Vector2(
@@ -324,7 +402,11 @@ export default class CanvasRenderer {
 
             this.selectWire(null);
 
-            this.selectComponent(hit);
+            if (!hit.selected) {
+
+                this.selectComponent(hit);
+
+            }
 
             // Toggle switch
             if (hit instanceof Switch) {
@@ -333,15 +415,34 @@ export default class CanvasRenderer {
 
                 this.circuit.simulate();
 
-                return;
+                
 
             }
-
+            this.editorState.selectedComponent = hit;
             this.editorState.draggingComponent = true;
 
-            this.editorState.dragOffset =
-                world.subtract(hit.position);
+            this.editorState.multiDragOffsets.clear();
 
+            if (hit.selected && this.editorState.selectedComponents.length > 1) {
+
+                for (const component of this.editorState.selectedComponents) {
+
+                    this.editorState.multiDragOffsets.set(
+
+                        component,
+
+                        world.subtract(component.position)
+
+                    );
+
+                }
+
+            } else {
+
+                this.editorState.dragOffset =
+                    world.subtract(hit.position);
+
+            }
             return;
 
         }
@@ -361,6 +462,17 @@ export default class CanvasRenderer {
         this.selectComponent(null);
 
         this.selectWire(wire);
+
+        if (!wire) {
+
+            this.editorState.selectionBoxActive = true;
+
+            this.editorState.selectionStart = world;
+
+            this.editorState.selectionEnd = world;
+
+        }
+
 
     }
 
@@ -392,25 +504,71 @@ export default class CanvasRenderer {
             const pin =
                 this.circuit.getPinAt(world);
 
-            if (!pin)
+            if (pin) {
+
+                this.editorState.currentWire =
+                    new Wire(pin);
+
+                this.editorState.wiring = true;
+
                 return;
 
-            // Pin.getWorldPosition() now reads directly from its owner
-            // component, so no manual position/rotation sync is needed
-            // here (this used to be a stale-data hack, and it never
-            // even accounted for rotation).
-            this.editorState.currentWire = new Wire(pin);
-            this.editorState.wiring = true;
-            return;
+            }
 
+            const junction =
+                this.circuit.getJunctionAt(world);
 
+            if (junction) {
+
+                this.editorState.currentWire =
+                    new Wire(junction);
+
+                this.editorState.wiring = true;
+
+                return;
+
+            }
 
             return;
 
         }
 
+
         const wire =
             this.editorState.currentWire;
+
+
+
+        // ------------------------------
+        // Clicked on existing wire
+        // ------------------------------
+
+        const hit = this.circuit.getWireHit(world);
+
+        if (hit) {
+
+            // splitWire() truncates the existing wire down to the junction and
+            // pushes a new "tail" wire from the junction to its old endpoint.
+            // We then finish the wire the user is currently drawing onto that
+            // same junction - three wires now meet at one point, like CircuitVerse.
+            const junction =
+                this.circuit.splitWire(hit.wire, hit.point);
+
+            wire.finishAtJunction(junction);
+
+            wire.addVertex(
+                junction.getWorldPosition()
+            );
+
+            this.circuit.addWire(wire);
+
+            this.editorState.currentWire = null;
+            this.editorState.wiring = false;
+
+            return;
+
+        }
+
 
         // ------------------------------
         // Finish on another pin
@@ -433,6 +591,7 @@ export default class CanvasRenderer {
             );
 
             this.circuit.addWire(wire);
+
 
             this.editorState.currentWire = null;
             this.editorState.wiring = false;
@@ -460,20 +619,21 @@ export default class CanvasRenderer {
         // Delete
         if (e.key === "Delete") {
 
-            // Delete selected component
-            if (this.editorState.selectedComponent) {
+            // Multiple components selected
+            if (this.editorState.selectedComponents.length > 0) {
 
-                this.circuit.remove(
-                    this.editorState.selectedComponent
+                this.circuit.removeComponents(
+                    this.editorState.selectedComponents
                 );
 
+                this.editorState.selectedComponents = [];
                 this.editorState.selectedComponent = null;
 
                 return;
 
             }
 
-            // Delete selected wire
+            // Selected wire
             const wire =
                 this.circuit.getSelectedWire();
 
@@ -486,7 +646,6 @@ export default class CanvasRenderer {
             }
 
         }
-
         // Cancel wire drawing
         if (
             e.key === "Escape" &&
@@ -711,6 +870,42 @@ export default class CanvasRenderer {
         this.toolManager.setTool(Tool.SELECT);
 
     }
+    private placeDFlipFlop(
+    e: MouseEvent
+): void {
+
+    const mouse =
+        new Vector2(
+            e.offsetX,
+            e.offsetY
+        );
+
+    const world =
+        this.camera.screenToWorld(mouse);
+
+    const x =
+        Math.round(world.x / 20) * 20;
+
+    const y =
+        Math.round(world.y / 20) * 20;
+
+    this.circuit.add(
+
+        new DFlipFlop(
+
+            new Vector2(x, y),
+
+            this.editorState.placementRotation
+
+        )
+
+    );
+
+    this.toolManager.setTool(
+        Tool.SELECT
+    );
+
+}
 
 
 
@@ -795,6 +990,63 @@ export default class CanvasRenderer {
         return this.toolManager.getTool();
 
     }
+    private drawSelectionBox(): void {
+
+        const start =
+            this.editorState.selectionStart;
+
+        const end =
+            this.editorState.selectionEnd;
+
+        const x =
+            Math.min(start.x, end.x);
+
+        const y =
+            Math.min(start.y, end.y);
+
+        const width =
+            Math.abs(end.x - start.x);
+
+        const height =
+            Math.abs(end.y - start.y);
+
+        this.ctx.save();
+
+        this.ctx.translate(
+            -this.camera.position.x * this.camera.zoom,
+            -this.camera.position.y * this.camera.zoom
+        );
+
+        this.ctx.scale(
+            this.camera.zoom,
+            this.camera.zoom
+        );
+
+        this.ctx.fillStyle =
+            "rgba(79,195,247,0.15)";
+
+        this.ctx.strokeStyle =
+            "#4FC3F7";
+
+        this.ctx.lineWidth = 1;
+
+        this.ctx.fillRect(
+            x,
+            y,
+            width,
+            height
+        );
+
+        this.ctx.strokeRect(
+            x,
+            y,
+            width,
+            height
+        );
+
+        this.ctx.restore();
+
+    }
 
 
     private render = (): void => {
@@ -820,6 +1072,13 @@ export default class CanvasRenderer {
             this.camera
         );
 
+
+        if (this.editorState.selectionBoxActive) {
+
+            this.drawSelectionBox();
+
+        }
+
         // Preview
         if (
             this.editorState.currentWire
@@ -841,15 +1100,54 @@ export default class CanvasRenderer {
 
         this.junctionRenderer.draw(
 
-    this.ctx,
+            this.ctx,
 
-    this.circuit,
+            this.circuit,
 
-    this.camera
+            this.camera
 
-);
+        );
+
+
+
 
         requestAnimationFrame(this.render);
+
+    }
+    public saveCircuit(): void {
+
+        const json =
+            this.serializer.save(this.circuit);
+
+        const blob = new Blob(
+            [json],
+            { type: "application/json" }
+        );
+
+        const url =
+            URL.createObjectURL(blob);
+
+        const a =
+            document.createElement("a");
+
+        a.href = url;
+
+        a.download = "circuit.json";
+
+        a.click();
+
+        URL.revokeObjectURL(url);
+
+    }
+    public loadCircuit(json: string): void {
+
+        this.circuit =
+            this.deserializer.load(json);
+
+    }
+    public newCircuit(): void {
+
+        this.circuit = new Circuit();
 
     }
 

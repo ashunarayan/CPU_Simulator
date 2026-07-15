@@ -1,168 +1,191 @@
-
-import toolManager from "./engine/tools/ToolManager";
 import Tool from "./engine/tools/Tool";
 import { useEffect, useRef, useState } from "react";
 import "./index.css";
 import CanvasRenderer from "./engine/renderer/CanvasRenderer";
+import Toolbar from "./ui/Toolbar";
 
 function App() {
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rendererRef =
-    useRef<CanvasRenderer | null>(null);
+    const canvasRef =
+        useRef<HTMLCanvasElement>(null);
 
-  const [mouse, setMouse] =
-    useState("(0,0)");
+    const rendererRef =
+        useRef<CanvasRenderer | null>(null);
 
-  const [zoom, setZoom] =
-    useState("100%");
+    const fileInputRef =
+        useRef<HTMLInputElement>(null);
 
-  const [tool, setTool] =
-    useState("SELECT");
+    const [tool, setTool] =
+        useState<Tool>(Tool.SELECT);
 
-  useEffect(() => {
+    const [fileMenuOpen, setFileMenuOpen] =
+        useState(false);
 
-    if (!canvasRef.current)
-        return;
+    useEffect(() => {
 
-    if (rendererRef.current)
-        return;
+        if (!canvasRef.current)
+            return;
 
-    rendererRef.current =
-        new CanvasRenderer(canvasRef.current);
+        if (rendererRef.current)
+            return;
 
-}, []);
+        rendererRef.current =
+            new CanvasRenderer(canvasRef.current);
 
-  useEffect(() => {
+    }, []);
 
-    const timer = setInterval(() => {
+    useEffect(() => {
 
-      if (!rendererRef.current)
-        return;
+        const timer = setInterval(() => {
 
-      const pos =
-        rendererRef.current.getMouseWorld();
+            if (!rendererRef.current)
+                return;
 
-      setMouse(
+            setTool(
+                rendererRef.current.getCurrentTool()
+            );
 
-        `(${Math.round(pos.x)}, ${Math.round(pos.y)})`
+        }, 40);
 
-      );
+        return () => clearInterval(timer);
 
-      setZoom(
+    }, []);
 
-        `${Math.round(
+    const handleFileClick = () => {
 
-          rendererRef.current.getZoom() * 100
+        setFileMenuOpen(v => !v);
 
-        )}%`
+    };
 
-      );
+    const handleOpen = async (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
 
-      setTool(
+        const file = e.target.files?.[0];
 
-        Tool[
-        rendererRef.current.getCurrentTool()
-        ]
+        if (!file)
+            return;
 
-      );
+        const text =
+            await file.text();
 
-    }, 40);
+        rendererRef.current?.loadCircuit(text);
 
-    return () => clearInterval(timer);
+        e.target.value = "";
 
-  }, []);
+    };
 
+    return (
 
+        <div className="app">
 
+            <Toolbar
 
+                activeTool={tool}
 
+                onFileClick={handleFileClick}
 
+            />
 
+            {
 
-  return (
-    <div className="app">
+                fileMenuOpen &&
 
-      <header className="topbar">
-        <div className="logo">
+                <div className="file-dropdown">
 
-          <span>⚡</span>
+                    <button
 
-          <span>CPU Simulator</span>
+                        onClick={() => {
 
-        </div>
+                            rendererRef.current?.newCircuit();
 
-        <div className="version">
-          v0.1
-        </div>
-      </header>
+                            setFileMenuOpen(false);
 
-      <main className="workspace">
+                        }}
 
-        <aside className="left-panel">
+                    >
 
-          <button onClick={() => toolManager.setTool(Tool.SELECT)}>
-            Select
-          </button>
+                        New
 
-          <button
-            className={
-              toolManager.getTool() === Tool.WIRE
-                ? "active-tool"
-                : ""
+                    </button>
+
+                    <button
+
+                        onClick={() => {
+
+                            fileInputRef.current?.click();
+
+                            setFileMenuOpen(false);
+
+                        }}
+
+                    >
+
+                        Open...
+
+                    </button>
+
+                    <button
+
+                        onClick={() => {
+
+                            rendererRef.current?.saveCircuit();
+
+                            setFileMenuOpen(false);
+
+                        }}
+
+                    >
+
+                        Save
+
+                    </button>
+
+                </div>
+
             }
-            onClick={() => toolManager.setTool(Tool.WIRE)}
-          >
-            Wire
-          </button>
 
-          <button onClick={() => toolManager.setTool(Tool.AND)}>
-            AND
-          </button>
+            <main className="workspace">
 
-          <button onClick={() => toolManager.setTool(Tool.OR)}>
-            OR
-          </button>
+                <section className="canvas-container">
 
-          <button onClick={() => toolManager.setTool(Tool.NOT)}>
-            NOT
-          </button>
+                    <canvas
 
-          <button onClick={() => toolManager.setTool(Tool.XOR)}>
-            XOR
-          </button>
+                        ref={canvasRef}
 
-          <button onClick={() => toolManager.setTool(Tool.SWITCH)}>
-            Switch
-          </button>
+                        className="editor-canvas"
 
-          <button onClick={() => toolManager.setTool(Tool.LED)}>
-            LED
-          </button>
+                    />
 
-        </aside>
+                </section>
 
-        <section className="canvas-container">
-          <canvas ref={canvasRef} className="editor-canvas"></canvas>
-        </section>
-        <aside className="right-panel">
+            </main>
 
-        </aside>
+            <input
+    ref={fileInputRef}
+    type="file"
+    accept=".json"
+    style={{ display: "none" }}
+    onChange={async (e) => {
 
-      </main>
+    const file =
+        e.target.files?.[0];
 
-      <footer className="statusbar">
+    if (!file)
+        return;
 
-        <span>Mouse : {mouse}</span>
+    const text =
+        await file.text();
 
-        <span>Zoom : {zoom}</span>
+    rendererRef.current?.loadCircuit(text);
 
-        <span>Tool : {tool}</span>
+}}
+/>
 
-      </footer>
+        </div>
 
-    </div>
-  );
+    );
+
 }
 
 export default App;
