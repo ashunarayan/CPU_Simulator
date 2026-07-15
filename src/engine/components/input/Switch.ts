@@ -132,4 +132,6 @@ public setState(state: LogicState): void {
     this.pins[0].value = state;
 
 }
+
+
 }

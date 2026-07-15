@@ -86,6 +86,7 @@ this.pins.push(
 
 }
 public override evaluate(): void {
+   
 
     const a = this.pins[0].value;
 

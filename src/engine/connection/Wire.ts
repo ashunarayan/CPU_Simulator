@@ -2,7 +2,7 @@ import Pin from "./Pin";
 import Junction from "./Junction";
 import Vector2 from "../math/Vector2";
 import LogicState from "../simulation/LogicState";
-
+import PinType from "./PinType";
 // A wire always starts and ends at either a real component Pin, or a
 // Junction created by splitting another wire. Both expose the same
 // getWorldPosition()/value shape, so nothing else in Wire needs to care
@@ -104,44 +104,60 @@ export default class Wire {
 
         const last = this.getLastVertex();
 
-        if (
+        if (last.x !== end.x && last.y !== end.y) {
+    this.vertices.push(
+        new Vector2(end.x, last.y)
+    );
+}
 
-            last.x !== end.x &&
-
-            last.y !== end.y
-
-        ) {
-
-            this.vertices.push(
-
-                new Vector2(
-
-                    end.x,
-
-                    last.y
-
-                )
-
-            );
-
-        }
-
-    }
+this.normalizeDirection();
+}
 
     // New: completing a wire onto a Junction instead of a Pin. Only the
     // originating pin (if any) gets locked - a Junction isn't a component
     // pin, so there's nothing on that side to connect/lock.
     public finishAtJunction(junction: Junction): void {
 
-        this.to = junction;
+    this.to = junction;
 
-        if (this.from instanceof Pin) {
+    if (this.from instanceof Pin) {
 
-            this.from.connect();
-
-        }
+        this.from.connect();
 
     }
+
+    // Same corner insertion logic as finish()
+    const end = junction.getWorldPosition();
+
+    const last = this.getLastVertex();
+
+    if (
+
+        last.x !== end.x &&
+
+        last.y !== end.y
+
+    ) {
+
+        this.vertices.push(
+
+            new Vector2(
+
+                end.x,
+
+                last.y
+
+            )
+
+        );
+
+    }
+
+    this.normalizeDirection();
+
+}
+
+
 
     public updateSignal(): void {
 
@@ -154,6 +170,8 @@ export default class Wire {
         }
 
     }
+
+
 
     public disconnect(): void {
 
@@ -228,6 +246,40 @@ private serializeEndpoint(endpoint: any) {
         junctionId: endpoint.id
 
     };
+
+}
+private normalizeDirection(): void {
+
+    if (!this.to) return;
+
+    const outputEndedUpAsSink =
+        this.to instanceof Pin &&
+        this.to.type === PinType.OUTPUT;
+
+    const inputEndedUpAsSource =
+        this.from instanceof Pin &&
+        this.from.type === PinType.INPUT;
+
+    if (outputEndedUpAsSink || inputEndedUpAsSource) {
+
+        this.swapEndpoints();
+
+    }
+
+}
+private swapEndpoints(): void {
+
+    const oldFrom = this.from;
+    const oldTo = this.to!;
+    const oldBends = this.vertices.slice(1);
+
+    this.from = oldTo;
+    this.to = oldFrom;
+
+    this.vertices = [
+        oldTo.getWorldPosition(),
+        ...oldBends.reverse()
+    ];
 
 }
 }

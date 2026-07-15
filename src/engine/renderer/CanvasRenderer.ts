@@ -556,9 +556,7 @@ export default class CanvasRenderer {
 
             wire.finishAtJunction(junction);
 
-            wire.addVertex(
-                junction.getWorldPosition()
-            );
+            
 
             this.circuit.addWire(wire);
 
@@ -586,9 +584,7 @@ export default class CanvasRenderer {
             // permanently locks rotation on both components involved.
             wire.finish(endPin);
 
-            wire.addVertex(
-                endPin.getWorldPosition()
-            );
+            
 
             this.circuit.addWire(wire);
 
