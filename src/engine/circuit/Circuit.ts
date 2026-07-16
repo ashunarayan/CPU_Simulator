@@ -587,6 +587,15 @@ export default class Circuit {
     }
 
 }
+public getSelectedComponents() {
+
+    return this.components.filter(
+
+        component => component.selected
+
+    );
+
+}
 
    public simulate(): void {
 

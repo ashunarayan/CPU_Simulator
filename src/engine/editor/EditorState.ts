@@ -2,6 +2,7 @@ import Tool from "../tools/Tool";
 import Vector2 from "../math/Vector2";
 import Component from "../components/base/Component";
 import Wire from "../connection/Wire";
+import ClipboardManager from "../clipboard/ClipboardManager";
 
 export default class EditorState {
 
@@ -29,4 +30,7 @@ export default class EditorState {
 
     public selectionEnd = new Vector2();
     public multiDragOffsets = new Map<Component, Vector2>();
+
+    public clipboard = new ClipboardManager();
+
 }

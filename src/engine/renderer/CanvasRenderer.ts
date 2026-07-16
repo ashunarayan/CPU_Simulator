@@ -24,7 +24,7 @@ import CircuitDeserializer
     from "../serialization/CircuitDeserializer";
 import DFlipFlop
     from "../components/sequential/DFlipFlop";
-
+import ComponentFactory from "../components/ComponentFactory";
 
 export default class CanvasRenderer {
 
@@ -61,14 +61,14 @@ export default class CanvasRenderer {
         this.gridRenderer = new GridRenderer();
         this.circuit = new Circuit();
 
-        
 
-        
 
-        
 
-        
-        
+
+
+
+
+
 
         this.canvas.addEventListener("wheel", this.onWheel);
 
@@ -415,7 +415,7 @@ export default class CanvasRenderer {
 
                 this.circuit.simulate();
 
-                
+
 
             }
             this.editorState.selectedComponent = hit;
@@ -556,7 +556,7 @@ export default class CanvasRenderer {
 
             wire.finishAtJunction(junction);
 
-            
+
 
             this.circuit.addWire(wire);
 
@@ -584,7 +584,7 @@ export default class CanvasRenderer {
             // permanently locks rotation on both components involved.
             wire.finish(endPin);
 
-            
+
 
             this.circuit.addWire(wire);
 
@@ -683,7 +683,52 @@ export default class CanvasRenderer {
             return;
 
         }
+        // Copy selected components
+        if (e.ctrlKey && (e.key === "c" || e.key === "C")) {
 
+            e.preventDefault();
+
+            this.copySelection();
+
+            return;
+
+        }
+        if (e.ctrlKey && e.key.toLowerCase() === "v") {
+
+    const copied =
+        this.editorState.clipboard.paste();
+
+    if (copied.length === 0) {
+
+        return;
+
+    }
+
+    const newSelection = [];
+
+    for (const data of copied) {
+
+        data.x += 20;
+        data.y += 20;
+
+        const component =
+            ComponentFactory.create(data);
+
+        this.circuit.add(component);
+
+        newSelection.push(component);
+
+    }
+
+    this.editorState.selectedComponents =
+        newSelection;
+
+    this.editorState.selectedComponent =
+        newSelection[0] ?? null;
+
+    return;
+
+}
     }
 
 
@@ -867,41 +912,63 @@ export default class CanvasRenderer {
 
     }
     private placeDFlipFlop(
-    e: MouseEvent
-): void {
+        e: MouseEvent
+    ): void {
 
-    const mouse =
-        new Vector2(
-            e.offsetX,
-            e.offsetY
+        const mouse =
+            new Vector2(
+                e.offsetX,
+                e.offsetY
+            );
+
+        const world =
+            this.camera.screenToWorld(mouse);
+
+        const x =
+            Math.round(world.x / 20) * 20;
+
+        const y =
+            Math.round(world.y / 20) * 20;
+
+        this.circuit.add(
+
+            new DFlipFlop(
+
+                new Vector2(x, y),
+
+                this.editorState.placementRotation
+
+            )
+
         );
 
-    const world =
-        this.camera.screenToWorld(mouse);
+        this.toolManager.setTool(
+            Tool.SELECT
+        );
 
-    const x =
-        Math.round(world.x / 20) * 20;
+    }
+    private copySelection(): void {
 
-    const y =
-        Math.round(world.y / 20) * 20;
+        const selected = this.circuit.getSelectedComponents();
+        if (selected.length === 0) {
+            return;
+        }
 
-    this.circuit.add(
+        this.editorState.clipboard.copy(
 
-        new DFlipFlop(
+            selected.map(component => component.serialize())
 
-            new Vector2(x, y),
+        );
 
-            this.editorState.placementRotation
+        console.log(
 
-        )
+            "Copied:",
 
-    );
+            this.editorState.clipboard.paste()
 
-    this.toolManager.setTool(
-        Tool.SELECT
-    );
+        );
 
-}
+    }
 
 
 
