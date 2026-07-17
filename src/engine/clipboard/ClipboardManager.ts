@@ -1,43 +1,53 @@
+import Vector2 from "../math/Vector2";
 export default class ClipboardManager {
 
-   private data = {
-
-    components: [] as any[],
-
-    wires: [] as any[]
-
-};
+    private data = {
+        components: [] as any[],
+        wires: [] as any[],
+        origin: {
+            x: 0,
+            y: 0
+        }
+    }
 
     public copy(
-    components: any[],
-    wires: any[]
-): void {
+        components: any[],
+        wires: any[],
+        origin: Vector2
+    ): void {
 
-    this.data = {
+        this.data = {
 
-        components: [...components],
+            components: [...components],
 
-        wires: [...wires]
+            wires: [...wires],
 
-    };
+            origin: {
+                x: origin.x,
+                y: origin.y
+            }
 
-}
+        };
 
-   public paste() {
+    }
 
-    return {
+    public paste() {
 
-        components: [...this.data.components],
+        return {
 
-        wires: [...this.data.wires]
+            components: [...this.data.components],
 
-    };
+            wires: [...this.data.wires],
 
-}
+            origin: this.data.origin
+
+        };
+
+    }
 
     public hasData(): boolean {
 
-       return this.data.components.length > 0;
+        return this.data.components.length > 0;
 
     }
 

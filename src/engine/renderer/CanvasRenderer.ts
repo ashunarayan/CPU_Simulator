@@ -699,6 +699,14 @@ export default class CanvasRenderer {
 
             const copied =
                 this.editorState.clipboard.paste();
+            const mouse =
+                this.editorState.mouseWorld;
+
+            const dx =
+                mouse.x - copied.origin.x;
+
+            const dy =
+                mouse.y - copied.origin.y;
 
             if (copied.components.length === 0) {
 
@@ -711,10 +719,17 @@ export default class CanvasRenderer {
             const componentMap =
                 new Map<number, Component>();
 
-            for (const data of copied.components) {
+            for (const original of copied.components) {
 
-                data.x += 20;
-                data.y += 20;
+                const data = {
+
+                    ...original,
+
+                    x: original.x + dx,
+
+                    y: original.y + dy
+
+                };
 
                 const component =
                     ComponentFactory.create(data);
@@ -723,7 +738,7 @@ export default class CanvasRenderer {
 
                 componentMap.set(
 
-                    data.id,
+                    original.id,
 
                     component
 
@@ -732,6 +747,7 @@ export default class CanvasRenderer {
                 newSelection.push(component);
 
             }
+
             this.pasteWires(
 
                 copied.wires,
@@ -979,6 +995,17 @@ export default class CanvasRenderer {
                 selected.map(c => c.id)
             );
 
+
+        const xs = selected.map(c => c.position.x);
+        const ys = selected.map(c => c.position.y);
+
+        const origin = new Vector2(
+
+            Math.min(...xs),
+
+            Math.min(...ys)
+
+        );
         const components =
             selected.map(c => c.serialize());
 
@@ -1036,73 +1063,75 @@ export default class CanvasRenderer {
         this.editorState.clipboard.copy(
 
             components,
-            wires
+            wires,
+            origin
 
         );
 
     }
 
     private pasteWires(
-    wires: any[],
-    componentMap: Map<number, Component>
-): void {
+        wires: any[],
+        componentMap: Map<number, Component>,
 
-    for (const data of wires) {
+    ): void {
 
-        const fromComponent =
-            componentMap.get(data.fromComponentId);
+        for (const data of wires) {
 
-        const toComponent =
-            componentMap.get(data.toComponentId);
+            const fromComponent =
+                componentMap.get(data.fromComponentId);
 
-        if (!fromComponent || !toComponent)
-            continue;
+            const toComponent =
+                componentMap.get(data.toComponentId);
 
-        const fromPin =
-            fromComponent.getPins()[data.fromPinIndex];
+            if (!fromComponent || !toComponent)
+                continue;
 
-        const toPin =
-            toComponent.getPins()[data.toPinIndex];
+            const fromPin =
+                fromComponent.getPins()[data.fromPinIndex];
 
-        if (!fromPin || !toPin)
-            continue;
+            const toPin =
+                toComponent.getPins()[data.toPinIndex];
 
-        const start =
-            fromPin.getWorldPosition();
+            if (!fromPin || !toPin)
+                continue;
 
-        const restoredVertices = [
+            const start =
+                fromPin.getWorldPosition();
 
-            start,
+            const restoredVertices = [
 
-            ...data.vertices.map(
-                (v: { x: number; y: number }) =>
+                start,
 
-                    new Vector2(
+                ...data.vertices.map(
+                    (v: { x: number; y: number }) =>
 
-                        start.x + v.x,
+                        new Vector2(
 
-                        start.y + v.y
+                            start.x + v.x,
 
-                    )
-            )
+                            start.y + v.y
 
-        ];
+                        )
+                )
 
-        const wire =
-            new Wire(fromPin);
+            ];
 
-        wire.restore(
+            const wire =
+                new Wire(fromPin);
 
-            toPin,
-            restoredVertices
+            wire.restore(
 
-        );
+                toPin,
+                restoredVertices
 
-        this.circuit.addWire(wire);
+            );
+
+            this.circuit.addWire(wire);
+
+        }
 
     }
-
-}
 
     private onWheel = (e: WheelEvent): void => {
 
