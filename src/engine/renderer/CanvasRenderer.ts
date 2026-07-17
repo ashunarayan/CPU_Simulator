@@ -25,6 +25,7 @@ import CircuitDeserializer
 import DFlipFlop
     from "../components/sequential/DFlipFlop";
 import ComponentFactory from "../components/ComponentFactory";
+import Pin from "../connection/Pin";
 
 export default class CanvasRenderer {
 
@@ -693,42 +694,63 @@ export default class CanvasRenderer {
             return;
 
         }
+
         if (e.ctrlKey && e.key.toLowerCase() === "v") {
 
-    const copied =
-        this.editorState.clipboard.paste();
+            const copied =
+                this.editorState.clipboard.paste();
 
-    if (copied.length === 0) {
+            if (copied.components.length === 0) {
 
-        return;
+                return;
 
-    }
+            }
 
-    const newSelection = [];
+            const newSelection = [];
 
-    for (const data of copied) {
+            const componentMap =
+                new Map<number, Component>();
 
-        data.x += 20;
-        data.y += 20;
+            for (const data of copied.components) {
 
-        const component =
-            ComponentFactory.create(data);
+                data.x += 20;
+                data.y += 20;
 
-        this.circuit.add(component);
+                const component =
+                    ComponentFactory.create(data);
 
-        newSelection.push(component);
+                this.circuit.add(component);
 
-    }
+                componentMap.set(
 
-    this.editorState.selectedComponents =
-        newSelection;
+                    data.id,
 
-    this.editorState.selectedComponent =
-        newSelection[0] ?? null;
+                    component
 
-    return;
+                );
 
-}
+                newSelection.push(component);
+
+            }
+            this.pasteWires(
+
+                copied.wires,
+
+                componentMap
+
+            );
+
+            this.editorState.selectedComponents =
+                newSelection;
+
+            this.editorState.selectedComponent =
+                newSelection[0] ?? null;
+
+            return;
+
+        }
+
+
     }
 
 
@@ -949,29 +971,138 @@ export default class CanvasRenderer {
     }
     private copySelection(): void {
 
-        const selected = this.circuit.getSelectedComponents();
-        if (selected.length === 0) {
-            return;
-        }
+        const selected =
+            this.circuit.getSelectedComponents();
+
+        const selectedIds =
+            new Set(
+                selected.map(c => c.id)
+            );
+
+        const components =
+            selected.map(c => c.serialize());
+
+        const wires =
+            this.circuit
+                .getWires()
+                .filter(wire => {
+
+                    return (
+
+                        wire.from instanceof Pin &&
+                        wire.to instanceof Pin &&
+
+                        selectedIds.has(wire.from.ownerId) &&
+                        selectedIds.has(wire.to.ownerId)
+
+                    );
+
+                })
+                .map(wire => {
+
+                    const start =
+                        wire.from.getWorldPosition();
+
+                    return {
+
+                        fromComponentId:
+                            (wire.from as Pin).ownerId,
+
+                        fromPinIndex:
+                            (wire.from as Pin).getIndex(),
+
+                        toComponentId:
+                            (wire.to as Pin).ownerId,
+
+                        toPinIndex:
+                            (wire.to as Pin).getIndex(),
+
+                        vertices:
+
+                            wire.vertices
+                                .slice(1)
+                                .map(v => ({
+
+                                    x: v.x - start.x,
+
+                                    y: v.y - start.y
+
+                                }))
+
+                    };
+
+                });
 
         this.editorState.clipboard.copy(
 
-            selected.map(component => component.serialize())
-
-        );
-
-        console.log(
-
-            "Copied:",
-
-            this.editorState.clipboard.paste()
+            components,
+            wires
 
         );
 
     }
 
+    private pasteWires(
+    wires: any[],
+    componentMap: Map<number, Component>
+): void {
 
+    for (const data of wires) {
 
+        const fromComponent =
+            componentMap.get(data.fromComponentId);
+
+        const toComponent =
+            componentMap.get(data.toComponentId);
+
+        if (!fromComponent || !toComponent)
+            continue;
+
+        const fromPin =
+            fromComponent.getPins()[data.fromPinIndex];
+
+        const toPin =
+            toComponent.getPins()[data.toPinIndex];
+
+        if (!fromPin || !toPin)
+            continue;
+
+        const start =
+            fromPin.getWorldPosition();
+
+        const restoredVertices = [
+
+            start,
+
+            ...data.vertices.map(
+                (v: { x: number; y: number }) =>
+
+                    new Vector2(
+
+                        start.x + v.x,
+
+                        start.y + v.y
+
+                    )
+            )
+
+        ];
+
+        const wire =
+            new Wire(fromPin);
+
+        wire.restore(
+
+            toPin,
+            restoredVertices
+
+        );
+
+        this.circuit.addWire(wire);
+
+    }
+
+}
 
     private onWheel = (e: WheelEvent): void => {
 

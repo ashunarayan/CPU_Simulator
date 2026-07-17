@@ -1,28 +1,55 @@
 export default class ClipboardManager {
 
-    private data: any[] = [];
+   private data = {
 
-    public copy(data: any[]): void {
+    components: [] as any[],
 
-        this.data = [...data];
+    wires: [] as any[]
 
-    }
+};
 
-    public paste(): any[] {
+    public copy(
+    components: any[],
+    wires: any[]
+): void {
 
-        return [...this.data];
+    this.data = {
 
-    }
+        components: [...components],
+
+        wires: [...wires]
+
+    };
+
+}
+
+   public paste() {
+
+    return {
+
+        components: [...this.data.components],
+
+        wires: [...this.data.wires]
+
+    };
+
+}
 
     public hasData(): boolean {
 
-        return this.data.length > 0;
+       return this.data.components.length > 0;
 
     }
 
     public clear(): void {
 
-        this.data = [];
+        this.data = {
+
+            components: [],
+
+            wires: []
+
+        };
 
     }
 

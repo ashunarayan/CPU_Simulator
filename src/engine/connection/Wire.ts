@@ -202,52 +202,8 @@ this.normalizeDirection();
         ];
 
     }
-    public serialize() {
+    
 
-    return {
-
-        from: this.serializeEndpoint(this.from),
-
-        to: this.to
-            ? this.serializeEndpoint(this.to)
-            : null,
-
-        vertices: this.vertices.map(v => ({
-
-            x: v.x,
-
-            y: v.y
-
-        }))
-
-    };
-
-}
-private serializeEndpoint(endpoint: any) {
-
-    if ("ownerId" in endpoint) {
-
-        return {
-
-            type: "PIN",
-
-            componentId: endpoint.ownerId,
-
-            pinIndex: endpoint.getIndex()
-
-        };
-
-    }
-
-    return {
-
-        type: "JUNCTION",
-
-        junctionId: endpoint.id
-
-    };
-
-}
 private normalizeDirection(): void {
 
     if (!this.to) return;
@@ -267,6 +223,7 @@ private normalizeDirection(): void {
     }
 
 }
+
 private swapEndpoints(): void {
 
     const oldFrom = this.from;
@@ -282,4 +239,24 @@ private swapEndpoints(): void {
     ];
 
 }
+
+public restore(
+    to: WireEndpoint,
+    vertices: Vector2[]
+): void {
+
+    this.to = to;
+
+    this.vertices = vertices;
+
+    if (this.from instanceof Pin) {
+        this.from.connect();
+    }
+
+    if (this.to instanceof Pin) {
+        this.to.connect();
+    }
+
+}
+
 }
